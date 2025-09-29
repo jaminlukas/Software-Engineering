@@ -17,3 +17,5 @@ aufgelistet. Sie helfen den Funktionsumfang der App klar zu strukturieren.
 8. Als Studentin möchte ich eine Mitfahr- und Carsharing-Börse auf dem Campus nutzen, um günstiger und nachhaltiger zur Uni zu kommen.
 9. Als Mitarbeiter der Mensa möchte ich den aktuellen Speiseplan mit Allergie- und Ernährungsfiltern (vegan, halal, glutenfrei) in die App stellen, um Studierenden transparente Essensinfos zu bieten.
 10. Als Student möchte ich einen Event- und Community-Kalender für Workshops, Partys und Hochschulsport in der App haben, um keine coolen Aktivitäten auf dem Campus zu verpassen.
+11. Als Student möchte ich meine Prüfungstermine, -räume und Ergebnisse in der App sehen, um den Überblick über meinen Studienfortschritt zu behalten.
+12. Als Erstsemester möchte ich ein interaktives Onboarding-Tutorial in der App nutzen, um die wichtigsten Funktionen des Campus und der App direkt kennenzulernen.
