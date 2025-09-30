@@ -34,8 +34,9 @@ modernes minimalistisch Desgin (im Franky abo paket enthalten)
 
 Dieses Projekt wird im Rahmen der Hochschule entwickelt von:
 
-Lukas (ohne s)
-Luka (mit s)
-Benjamin (ohne Ben)
-Feelix (mit 1 e)
+- Lukas (ohne s)  
+- Luka (mit s)  
+- Benjamin (ohne Ben)  
+- Feelix (mit 1 e)
+  
 
