@@ -26,9 +26,9 @@ Nutzer:innen werden über den Fortschritt ihres Tickets informiert.
 Verantwortliche sehen alle gemeldeten Tickets und können diese priorisieren, zuordnen und abschließen.
 
 ✨ Nicht Funktionale Anforderungen:  
-Vermeidung durch Spam durch bspw. Eingabefilter  
-Ascessibilty  
-modernes minimalistisch Desgin (im Franky abo paket enthalten)
+- Vermeidung durch Spam durch bspw. Eingabefilter  
+- Ascessibilty  
+- modernes minimalistisch Desgin (im Franky abo paket enthalten)
 
 👥 Team
 
