@@ -25,7 +25,19 @@ Nutzer:innen werden über den Fortschritt ihres Tickets informiert.
 👩‍🔧 Verwaltung für Hausmeister & Technik-Team  
 Verantwortliche sehen alle gemeldeten Tickets und können diese priorisieren, zuordnen und abschließen.
 
-Nicht Funktionale Anforderungen:  
+✨ Nicht Funktionale Anforderungen:  
 Vermeidung durch Spam durch bspw. Eingabefilter  
 Ascessibilty  
 modernes minimalistisch Desgin (im Franky abo paket enthalten)
+
+👥 Team
+
+Dieses Projekt wird im Rahmen der Hochschule entwickelt von:
+
+Lukas 
+
+Felix
+
+Benjamin (ohne Ben)
+
+Luka
