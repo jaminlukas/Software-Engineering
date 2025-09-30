@@ -34,10 +34,6 @@ Verantwortliche sehen alle gemeldeten Tickets und können diese priorisieren, zu
 - Ascessibilty der Meldungs-Eingabeoberfläche
 - modernes minimalistisch Desgin (im Franky abo paket enthalten)
 
-## 3) MVP Idee
-- Ist das Feature wirklich eine Kern Funktion
-Das Projekt wird in Kernfunktionen und Zusatz Features aufgeteilt. Durch Iterative Entwicklung werden weitere Features hinzugefügt. 
-
 ## 4) User Interaktion Design
 - Wie sieht die Navigation aus?
 - Wie sehen meine Seiten aus?
