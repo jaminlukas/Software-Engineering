@@ -7,3 +7,7 @@
 4. Als Professorin möchte ich den Status einer von mir gemeldeten Störung verfolgen können, damit ich weiß, wann die Reparatur abgeschlossen ist.
 
 5. Als Administrator möchte ich Tickets bestimmten Personen oder Teams zuweisen können, damit Schäden schneller von der zuständigen Stelle bearbeitet werden.
+
+
+
+<img width="1102" height="485" alt="image" src="https://github.com/user-attachments/assets/b91d859f-d127-4c9f-bd7d-d05b703a0b70" />
