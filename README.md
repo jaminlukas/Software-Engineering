@@ -7,26 +7,25 @@ So wird sichergestellt, dass Reparaturen schneller eingeleitet und die Campus-In
 
 ✨ Funktionen
 
-📝 Schadensmeldung
+📝 Schadensmeldung  
 Nutzer:innen können Schäden (z. B. defekte Geräte, kaputte Möbel, technische Probleme) bequem melden.
 
-📸 Foto-Upload
+📸 Foto-Upload  
 Zum besseren Verständnis können Bilder des Schadens hochgeladen werden.
 
-📍 Standortangabe
+📍 Standortangabe  
 Schäden lassen sich mit Raum- oder Standortangabe präzisieren.
 
-🎫 Ticket-System
+🎫 Ticket-System  
 Jede Meldung wird als Ticket erfasst und erhält einen Status (offen, in Bearbeitung, behoben).
 
-🔔 Benachrichtigungen
+🔔 Benachrichtigungen  
 Nutzer:innen werden über den Fortschritt ihres Tickets informiert.
 
-👩‍🔧 Verwaltung für Hausmeister & Technik-Team
+👩‍🔧 Verwaltung für Hausmeister & Technik-Team  
 Verantwortliche sehen alle gemeldeten Tickets und können diese priorisieren, zuordnen und abschließen.
 
-Nicht Funktionale Anforderungen:
-
-Vermeidung durch Spam durch bspw. Eingabefilter
-Ascessibilty
+Nicht Funktionale Anforderungen:  
+Vermeidung durch Spam durch bspw. Eingabefilter  
+Ascessibilty  
 modernes minimalistisch Desgin (im Franky abo paket enthalten)
