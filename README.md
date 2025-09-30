@@ -1,4 +1,4 @@
-*📲 CampusApp – Ticketsystem für Schäden*
+#📲 CampusApp – Ticketsystem für Schäden#
 
 Die CampusApp bietet ein einfaches und effizientes Ticketsystem, um Schäden innerhalb der Hochschule zu melden.
 Studierende und Mitarbeitende können Defekte, Ausfälle oder andere Probleme direkt per App erfassen.
