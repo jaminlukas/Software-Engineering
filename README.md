@@ -1,4 +1,3 @@
-
 # **📲 CampusApp – Ticketsystem für Schäden**
 
 Die CampusApp bietet ein einfaches und effizientes Ticketsystem, um Schäden innerhalb der Hochschule zu melden.
@@ -6,69 +5,84 @@ Studierende und Mitarbeitende können Defekte, Ausfälle oder andere Probleme di
 So wird sichergestellt, dass Reparaturen schneller eingeleitet und die Campus-Infrastruktur optimal genutzt werden kann.
 
 ## 👥 Team
-Dieses Projekt wird im Rahmen der Hochschule entwickelt von:
+Dieses Projekt wird im Rahmen der Hochschule von folgenden Personen entwickelt:
 
 - Lukas (ohne s)  
 - Luka (mit s)  
 - Benjamin (ohne Ben)  
 - Felix (mit x)
 
-## Anforderungen
+# Gedanken zur Entwicklung
 
-### ✨ Funktionale Anforderunen: 
-- 📝 Schadensmeldung  
-Nutzer:innen können Schäden (z. B. defekte Geräte, kaputte Möbel, technische Probleme) bequem melden.
-- 📸 Foto-Upload  
-Zum besseren Verständnis können Bilder des Schadens hochgeladen werden.
-- 📍 Standortangabe  
-Schäden lassen sich mit Raum- oder Standortangabe präzisieren.
-- 🎫 Ticket-System  
-Jede Meldung wird als Ticket erfasst und erhält einen Status (offen, in Bearbeitung, behoben).
-- 🔔 Benachrichtigungen  
-Nutzer:innen werden über den Fortschritt ihres Tickets informiert.
-- 👩‍🔧 Verwaltung für Hausmeister & Technik-Team  
-Verantwortliche sehen alle gemeldeten Tickets und können diese priorisieren, zuordnen und abschließen.
+## 1) Anforderungen
 
-### ✨ Nicht Funktionale Anforderungen:  
-- Vermeidung von Spam durch bspw. Eingabefilter  
-- Ascessibilty der Meldungs-Eingabeoberfläche
-- modernes minimalistisch Desgin (im Franky abo paket enthalten)
+### ✨ Funktionale Anforderungen: 
+- 📝 **Schadensmeldung:** Nutzer können Schäden (z. B. defekte Geräte, kaputte Möbel, technische Probleme) bequem melden.
+- 📸 **Foto-Upload:** Zum besseren Verständnis können Bilder des Schadens hochgeladen werden.
+- 📍 **Standortangabe:** Schäden lassen sich mit Raum- oder Standortangabe präzisieren.
+- 🎫 **Ticket-System:** Jede Meldung wird als Ticket erfasst und erhält einen Status (offen, in Bearbeitung, behoben).
+- 🔔 **Benachrichtigungen:** Nutzer werden über den Fortschritt ihres Tickets informiert.
+- 👩‍🔧 **Verwaltung für Hausmeister & Technik-Team:** Verantwortliche sehen alle gemeldeten Tickets und können diese priorisieren, zuordnen und abschließen.
+
+### ✨ Nicht-funktionale Anforderungen:  
+- Vermeidung von Spam durch bspw. Eingabefilter
+- Accessibility der Meldungs-Eingabeoberfläche
+- Modernes, minimalistisches Design
+
+## 2) Datenmodell 
+- **Wie sind die Daten aufgebaut?**  
+    Einzelne Ticketeinträge mit: E-Mail, Text, Bildern, Datum, Raumnummer (z.B. "R.3.10").
+- **Wie werden diese Daten erhoben?**  
+    Durch ein Formular auf einer Weboberfläche.
+- **Wie werden die Daten angewendet/abgerufen?**  
+    Abruf der Tickets, gefiltert nach Datum, Raumnummer, etc.
+- **Wie interagieren die Daten untereinander?**  
+     Einzelne Tickets können priorisiert und einem Team zugeordnet werden. Die Tickets an sich interagieren nicht untereinander.
 
 ## 3) MVP Idee
-- Ist das Feature wirklich eine Kern Funktion
-Das Projekt wird in Kernfunktionen und Zusatz Features aufgeteilt. Durch Iterative Entwicklung werden weitere Features hinzugefügt. 
+Das MVP besteht aus allen User-Story-Features aus dem GitHub-Projects-Tab, die als "Must-have" gekennzeichnet sind.
+- Formular zum Melden der Schäden
+- Raumangabe auf dem Formular, um den Ort zu bestimmen
+- Möglichkeit, Bilder hochzuladen
+- Admin-Ansicht auf alle eingereichten Tickets
 
 ## 4) User Interaktion Design
-- Wie sieht die Navigation aus?
-- Wie sehen meine Seiten aus?
-- Wie Soll der Benutzer angeleitet werden?
-Zeichnen der Grundlegenden Interaktion mit meiner Anwendung. Es genügt ein Basic Wireframe
+![User_interface](/picture/Basis_oberflaeche.png)
+Das Design wird "Mobile first" entwickelt, da die Skalierung eines Formulars von einer mobilen Oberfläche einfacher ist als die Komprimierung einer Desktop-Oberfläche.
 
-## 5) Skala
-- Sollen echte Nutzer auf die Anwendung?
-- Ist es ein Studien, Hobby, Portfolio Anwendung?
-- Verwende ich es in 1,6, 12 Monaten noch? 
-Es geht um den Richtigen Ansatz für die menge der Nutzer. So wird das System nicht unter oder über entwickelt.
+## 5) Skalierung
+- **Sollen echte Nutzer auf die Anwendung?**  
+    Nein. Die Applikation ist als MVP bis PoC (Proof of Concept) gedacht, ohne großangelegte Nutzertests.
+- **Wie lang ist der Zeithorizont für den Betrieb der Anwendung?**  
+    Das Projekt findet im Rahmen des 3. Semesters statt und bezieht sich somit auf maximal 12 Wochen.
 
-## 6) High Level Architektur
-- welche generellen Komponenten hat die Anwendung (Frontend, Backend, DB, ....)
-- Wie sieht die Kommunikation zwischen diesen Teilen aus?
-- Welche Tool sollen wie eingebunden werden.
-- Welches sind die Kritischen Bestandteile meiner Architektur?
-Hier wird man sich dem generellen Aufbau auf einer höheren ebene Klar.
+## 6) High-Level-Architektur
+- **Welche generellen Komponenten hat die Anwendung (Frontend, Backend, DB, ....)?**  
+    Als Komponenten wurden eine Oberfläche und eine Datenbank identifiziert. Eine dritte Komponente ist die Verbindung dieser beiden mit einer API. Das ist aus dem folgenden Ausschnitt unseres C4-Modells zu entnehmen:
+    ![generelle Komponenten aus dem C4 Modell](/picture/Event%20Storming%20Ticket%20System%20-%20Container%20Ticktsystem.jpg)
+    
+- **Wie sieht die Kommunikation zwischen diesen Teilen aus?**  
+    Die Verbindung unter den Komponenten wird mit einer API stattfinden. Durch den simplen MVP sind keine ausgefallenen technischen Lösungen nötig. Die Komponenten sind dabei in einzelnen Containern eingesetzt, um das Deployment und die Verbindung unter den Komponenten zu vereinfachen.
+- **Welches sind die kritischen Bestandteile der Architektur?**  
+    Durch das MVP-Design sind die hier gezeigten Komponenten die minimale Architektur, mit der die Applikation funktionieren kann. Kritisch ist dabei die persistente Datenspeicherung in der Datenbank und die Verbindung dieser zur Oberfläche durch APIs.
 
-**Bis hier hin waren alle Überlegungen nicht Technisch**
+**Bis hierhin waren alle Überlegungen nicht-technisch.**
+
 ## 7) Stack
-- Welche Tools kann ich für welchen teil der Architektur verwenden: Frontend: Reakt, ...
-- Wie arbeiten die einzelnen Tools zusammen?
-- Welche bekannten Tools währen für die Aufgabe geeignet?
-- Wie kann ich die Anwendung deployen? --> Deployment Path
-Nach der Festlegung der, Anwendungsfälle, Funktionen, Skala, Navigation und der generellen Struktur, die alle zur Anforderungsanalyse gehören kann man nun die Tools für die Anforderungen aussuchen. 
+- **Welche Tools können für welchen Teil der Architektur verwendet werden: Frontend: React,...?**  
+    Aus persönlicher Neugier entschied sich das Entwicklerteam für: React im Frontend, Django im Backend und MongoDB als Datenbank.  
+    - **React:** Da es erlaubt, die Anwendung als Single-Page Application zu bauen.  
+    - **Django:** Da Python eine vertraute Umgebung ist und Django es erlaubt, von jeder Komponente aus Calls abzusetzen.   
+    - **MongoDB:** Da für die Entwicklung eines MVP das leichte Aufsetzen einer Dokumenten-Datenbank ein Vorteil ist. Des Weiteren sind die behandelten Daten, wie aus 2. ersichtlich, nicht sehr komplex, was eine relationale Datenbank nicht zwingend nötig macht.
+- **Wie arbeiten die einzelnen Tools zusammen?**
+- **Wie kann die Anwendung deployed werden?**  
+    
+Nach der Festlegung der Anwendungsfälle, Funktionen, Skalierung, Navigation und der generellen Struktur, die alle zur Anforderungsanalyse gehören, können nun die Tools für die Anforderungen ausgesucht werden. 
 
 ## 8) Einstieg in die Entwicklung
 - Anlegen der Ordnerstruktur
-- Festlegen von Entwicklungsmaximen: Kiss, Css Formatierung, Clean Code, ...
-- Aufsetzen der Datenstruktur / Kritischsten Elementen zuerst
+- Festlegen von Entwicklungsmaximen: KISS, CSS-Formatierung, Clean Code, ...
+- Aufsetzen der Datenstruktur / Zuerst die kritischsten Elemente
 
 ## 9) Iterative Weiterentwicklung
-Ab der Implementierung des MVP und dessen Diplomiert können weiter Features hinzugefügt werden die in 4. gestrichen wurden.
+Nach der Implementierung des MVP und dessen Deployment können weitere Features aus dem Backlog hinzugefügt werden, welche in 4. gestrichen wurden.
