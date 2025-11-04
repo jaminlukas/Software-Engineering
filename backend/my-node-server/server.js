@@ -1,29 +1,63 @@
 // 🚀 server.js
-
 import express from "express";
+import cors from "cors";
+import { MongoClient } from "mongodb";
 
-import cors from "cors"; // 🚀 erlaubt Zugriff von deiner React-App
-
-const app = express();
-
+// --- Konfiguration ---
 const PORT = 3000;
+const MONGO_URL = "mongodb://localhost:27017";
+const DB_NAME = "my-test-db";
 
-// 🚀 Middleware
+// --- Initialisierung ---
+const app = express();
+const mongoClient = new MongoClient(MONGO_URL);
 
-app.use(cors()); // erlaubt React (Port 5173), Anfragen zu senden
+// --- Middleware ---
+app.use(cors()); // Erlaubt Cross-Origin-Anfragen (z.B. von einer React-App)
+app.use(express.json()); // Ermöglicht das Parsen von JSON im Request-Body
 
-app.use(express.json()); // ermöglicht JSON-Parsing im Body
+// --- Datenbankverbindung ---
+/**
+ * Stellt eine Verbindung zur MongoDB-Datenbank her und führt einen Test-Ping aus.
+ * Bei Erfolg wird der Server gestartet.
+ */
+async function connectToDatabase() {
+    console.log("Versuche, eine Verbindung zur MongoDB herzustellen...");
+    try {
+        await mongoClient.connect();
+        console.log("✅ Erfolgreich mit MongoDB verbunden!");
 
-// 🚀 Basisroute
+        // Testen der Verbindung mit einem Ping-Befehl
+        const pingResult = await mongoClient.db(DB_NAME).command({ ping: 1 });
+        console.log("✅ Datenbank-Ping erfolgreich:", pingResult);
 
+        // Server erst starten, nachdem die DB-Verbindung steht
+        app.listen(PORT, () => {
+            console.log(`✅ Server läuft auf http://localhost:${PORT} 🚀`);
+        });
+
+    } catch (error) {
+        console.error("❌ Fehler bei der Verbindung zur MongoDB:", error);
+        process.exit(1); // Beendet den Prozess bei einem DB-Verbindungsfehler
+    }
+}
+
+// --- Routen ---
+
+/**
+ * @route GET /
+ * @description Basisroute, die eine Willkommensnachricht zurückgibt.
+ */
 app.get("/", (req, res) => {
 
     res.send("👋 Willkommen auf deinem Node.js Server 🚀");
 
 });
 
-// 🚀 API-Route für React
-
+/**
+ * @route GET /api/info
+ * @description Gibt eine JSON-Antwort mit einer Nachricht und der aktuellen Uhrzeit zurück.
+ */
 app.get("/api/info", (req, res) => {
 
     res.json({
@@ -36,8 +70,11 @@ app.get("/api/info", (req, res) => {
 
 });
 
-// 🚀 Beispiel-POST-Route (optional)
-
+/**
+ * @route POST /api/echo
+ * @description Nimmt JSON-Daten im Body entgegen, loggt sie und sendet sie als Antwort zurück.
+ * @param {object} req.body - Die empfangenen JSON-Daten.
+ */
 app.post("/api/echo", (req, res) => {
 
     const data = req.body;
@@ -54,11 +91,5 @@ app.post("/api/echo", (req, res) => {
 
 });
 
-// 🚀 Server starten
-
-app.listen(PORT, () => {
-
-    console.log(`✅ Server läuft auf http://localhost:${PORT} 🚀`);
-
-});
-
+// --- Serverstart ---
+connectToDatabase();
