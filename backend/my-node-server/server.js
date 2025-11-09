@@ -1,95 +1,103 @@
-// 🚀 server.js
+/**
+ * @file server.js
+ * @description Haupt-Serverdatei für das Schadensmeldungs-Backend.
+ * Initialisiert den Express-Server, stellt die Verbindung zur MongoDB her
+ * und definiert die API-Endpunkte.
+ */
+
 import express from "express";
 import cors from "cors";
-import { MongoClient } from "mongodb";
+import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
+
+// Umgebungsvariablen aus .env-Datei laden
+dotenv.config();
 
 // --- Konfiguration ---
-const PORT = 3000;
-const MONGO_URL = "mongodb://localhost:27017";
-const DB_NAME = "my-test-db";
+// PORT wird aus der .env-Datei geladen, mit einem Standardwert von 3000
+const PORT = process.env.PORT || 3000;
+// MONGO_URL wird aus der .env-Datei geladen
+const MONGO_URL = process.env.MONGO_URL;
 
-// --- Initialisierung ---
+if (!MONGO_URL) {
+  console.error("FATAL ERROR: MONGO_URL ist nicht in der Umgebung definiert.");
+  process.exit(1);
+}
+
+// --- Express-App initialisieren ---
 const app = express();
-const mongoClient = new MongoClient(MONGO_URL);
 
 // --- Middleware ---
-app.use(cors()); // Erlaubt Cross-Origin-Anfragen (z.B. von einer React-App)
-app.use(express.json()); // Ermöglicht das Parsen von JSON im Request-Body
+app.use(cors());
+app.use(express.json());
 
-// --- Datenbankverbindung ---
 /**
- * Stellt eine Verbindung zur MongoDB-Datenbank her und führt einen Test-Ping aus.
- * Bei Erfolg wird der Server gestartet.
+ * @description Mongoose-Schema für eine Schadensmeldung.
+ * @property {string} uuid - Eine eindeutige ID für die Meldung.
+ * @property {string} raum - Der Raum oder Ort des Schadens.
+ * @property {string} beschreibung - Eine detaillierte Beschreibung des Schadens.
+ * @property {Date} erstellt_am - Das Datum, an dem die Meldung erstellt wurde.
  */
-async function connectToDatabase() {
+const reportSchema = new mongoose.Schema({
+    uuid: { type: String, required: true, unique: true },
+    raum: { type: String, required: true },
+    beschreibung: { type: String, required: true },
+    erstellt_am: { type: Date, default: Date.now },
+});
+
+const Report = mongoose.model("Report", reportSchema, "reports");
+
+// --- API-Routen ---
+
+/**
+ * Erstellt eine neue Schadensmeldung.
+ * @route POST /api/reports
+ * @param {express.Request} req - Das Request-Objekt, enthält { raum, beschreibung } im Body.
+ * @param {express.Response} res - Das Response-Objekt.
+ */
+app.post("/api/reports", async (req, res) => {
+    try {
+        const { raum, beschreibung } = req.body;
+
+        if (!raum || !beschreibung) {
+            return res.status(400).json({ message: "Raum und Beschreibung sind erforderlich." });
+        }
+
+        const newReport = new Report({
+            uuid: uuidv4(),
+            raum,
+            beschreibung,
+        });
+
+        await newReport.save();
+        console.log("📝 Neue Schadensmeldung gespeichert:", newReport);
+        res.status(201).json(newReport);
+
+    } catch (error) {
+        console.error("❌ Fehler beim Speichern der Meldung:", error);
+        res.status(500).json({ message: "Interner Serverfehler beim Speichern der Meldung." });
+    }
+});
+
+/**
+ * Stellt die Verbindung zur MongoDB her und startet den Express-Server.
+ */
+async function startServer() {
     console.log("Versuche, eine Verbindung zur MongoDB herzustellen...");
     try {
-        await mongoClient.connect();
+        await mongoose.connect(MONGO_URL);
         console.log("✅ Erfolgreich mit MongoDB verbunden!");
 
-        // Testen der Verbindung mit einem Ping-Befehl
-        const pingResult = await mongoClient.db(DB_NAME).command({ ping: 1 });
-        console.log("✅ Datenbank-Ping erfolgreich:", pingResult);
-
-        // Server erst starten, nachdem die DB-Verbindung steht
         app.listen(PORT, () => {
-            console.log(`✅ Server läuft auf http://localhost:${PORT} 🚀`);
+            console.log(`✅ Server läuft auf http://localhost:${PORT}`);
         });
 
     } catch (error) {
-        console.error("❌ Fehler bei der Verbindung zur MongoDB:", error);
-        process.exit(1); // Beendet den Prozess bei einem DB-Verbindungsfehler
+        console.error("❌ Fehler beim Starten des Servers oder der DB-Verbindung:", error);
+        process.exit(1);
     }
 }
 
-// --- Routen ---
-
-/**
- * @route GET /
- * @description Basisroute, die eine Willkommensnachricht zurückgibt.
- */
-app.get("/", (req, res) => {
-
-    res.send("👋 Willkommen auf deinem Node.js Server 🚀");
-
-});
-
-/**
- * @route GET /api/info
- * @description Gibt eine JSON-Antwort mit einer Nachricht und der aktuellen Uhrzeit zurück.
- */
-app.get("/api/info", (req, res) => {
-
-    res.json({
-
-        message: "Hallo aus deinem Node.js-Backend 🚀",
-
-        time: new Date().toLocaleTimeString(),
-
-    });
-
-});
-
-/**
- * @route POST /api/echo
- * @description Nimmt JSON-Daten im Body entgegen, loggt sie und sendet sie als Antwort zurück.
- * @param {object} req.body - Die empfangenen JSON-Daten.
- */
-app.post("/api/echo", (req, res) => {
-
-    const data = req.body;
-
-    console.log("📦 Empfangen:", data);
-
-    res.json({
-
-        received: data,
-
-        status: "✅ Erfolgreich empfangen 🚀",
-
-    });
-
-});
-
 // --- Serverstart ---
-connectToDatabase();
+startServer();

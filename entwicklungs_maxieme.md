@@ -181,3 +181,34 @@ function sendEmail(report) { ... }
   }
 }
 ```
+---
+
+## Git Branching Modell
+
+Wir verwenden ein einfaches, aber robustes Branching-Modell, um die Entwicklung organisiert und stabil zu halten.
+
+### Kernprinzipien
+
+1.  **`main`:** Dieser Branch enthält ausschließlich **produktionsreifen Code**. Es wird niemals direkt auf `main` gearbeitet.
+2.  **`develop`:** Der Haupt-Integrationsbranch. Alle neuen Features werden hier zusammengeführt. Er repräsentiert den aktuellen Entwicklungsstand für das nächste Release.
+3.  **`feature/*`:** Für jede neue Funktion wird ein eigener Branch von `develop` erstellt. Dies isoliert die Arbeit und verhindert Konflikte.
+
+### Workflow
+
+- **Start:** Ein neuer Feature-Branch wird immer vom aktuellen `develop`-Branch abgezweigt (`git switch -c feature/mein-feature`).
+- **Entwicklung:** Commits werden regelmäßig auf dem Feature-Branch gemacht.
+- **Abschluss:** Wenn das Feature fertig ist, wird der Branch per Pull Request zurück in `develop` gemerged.
+
+### Schaubild: Branch-Architektur
+
+```
+main:    --------------------------------------------o (Release v1.0)
+           ^
+           | (Merge)
+develop: --o-----------o-------------------o---------o------>
+             \         / \                 /
+              \       /   \               /
+feature/a:     `-----`     \             /
+                            \           /
+feature/b:                   `---------`
+```
