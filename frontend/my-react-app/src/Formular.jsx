@@ -8,6 +8,7 @@ import axios from 'axios';
 import './Formular.css';
 
 const API_URL = '/api/reports';
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /**
  * Eine Komponente, die je nach Status eine Erfolgs- oder Fehlermeldung anzeigt.
@@ -31,9 +32,25 @@ const FeedbackPanel = ({ status }) => {
 function Formular() {
   const [room, setRoom] = useState('');
   const [description, setDescription] = useState('');
+  const [email, setEmail] = useState('');
+  const [imageData, setImageData] = useState('');
   const [status, setStatus] = useState('idle');
 
   const isSending = status === 'sending';
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      setImageData('');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageData(reader.result?.toString() || '');
+    };
+    reader.readAsDataURL(file);
+  };
 
   /**
    * Behandelt das Absenden des Formulars.
@@ -42,18 +59,27 @@ function Formular() {
    */
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (!emailRegex.test(email)) {
+      setStatus('error');
+      return;
+    }
+
     setStatus('sending');
 
     try {
       const response = await axios.post(API_URL, {
         raum: room,
         beschreibung: description,
+        email,
+        bild: imageData,
       });
 
       if (response.status === 201) {
         setStatus('success');
         setRoom('');
         setDescription('');
+        setEmail('');
+        setImageData('');
         setTimeout(() => setStatus('idle'), 4000);
       } else {
         // Dieser Fall tritt selten ein, da axios bei Fehlern (z.B. 4xx, 5xx) einen Error wirft
@@ -82,6 +108,18 @@ function Formular() {
           />
         </div>
         <div className="form-group">
+          <label htmlFor="email">E-Mail</label>
+          <input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="z.B. name@hochschule.de"
+            required
+            disabled={isSending}
+          />
+        </div>
+        <div className="form-group">
           <label htmlFor="description">Beschreibung des Schadens</label>
           <textarea
             id="description"
@@ -89,6 +127,16 @@ function Formular() {
             onChange={(e) => setDescription(e.target.value)}
             placeholder="z.B. Beamer funktioniert nicht, Stuhlbein gebrochen"
             required
+            disabled={isSending}
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="image">Bild hinzufügen (optional)</label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleFileChange}
             disabled={isSending}
           />
         </div>

@@ -1,15 +1,17 @@
-version: '3.8'
+vversion: '3.8'
+
 services:
   mongo: 
     image: mongo:7.0
     container_name: mongo_container
     environment:
-      MONGO_INITDB_ROOT_USERNAME: mongoadmin
-      MONGO_INITDB_ROOT_PASSWORD: Franki
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+
 volumes:
   mongo_data:
     driver: local

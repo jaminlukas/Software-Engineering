@@ -15,9 +15,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 // --- Konfiguration ---
-// PORT wird aus der .env-Datei geladen, mit einem Standardwert von 3000
 const PORT = process.env.PORT || 3000;
-// MONGO_URL wird aus der .env-Datei geladen
 const MONGO_URL = process.env.MONGO_URL;
 
 if (!MONGO_URL) {
@@ -30,73 +28,87 @@ const app = express();
 
 // --- Middleware ---
 app.use(cors());
-app.use(express.json());
+// Erhöhtes Limit erlaubt Base64-kodierte Bilder im JSON-Body
+app.use(express.json({ limit: "5mb" }));
 
 /**
- * @description Mongoose-Schema für eine Schadensmeldung.
- * @property {string} uuid - Eine eindeutige ID für die Meldung.
- * @property {string} raum - Der Raum oder Ort des Schadens.
- * @property {string} beschreibung - Eine detaillierte Beschreibung des Schadens.
- * @property {Date} erstellt_am - Das Datum, an dem die Meldung erstellt wurde.
+ * Mongoose-Schema für eine Schadensmeldung.
  */
 const reportSchema = new mongoose.Schema({
-    uuid: { type: String, required: true, unique: true },
-    raum: { type: String, required: true },
-    beschreibung: { type: String, required: true },
-    erstellt_am: { type: Date, default: Date.now },
+  uuid: { type: String, required: true, unique: true },
+  raum: { type: String, required: true },
+  beschreibung: { type: String, required: true },
+  email: { type: String, required: true },
+  bild: { type: String }, // Base64 oder Data-URL
+  erstellt_am: { type: Date, default: Date.now },
 });
 
 const Report = mongoose.model("Report", reportSchema, "reports");
+
+// --- Hilfsfunktionen ---
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidImagePayload = (bild) => {
+  if (!bild) return true; // optional
+  if (typeof bild !== "string") return false;
+  return bild.startsWith("data:image/");
+};
 
 // --- API-Routen ---
 
 /**
  * Erstellt eine neue Schadensmeldung.
  * @route POST /api/reports
- * @param {express.Request} req - Das Request-Objekt, enthält { raum, beschreibung } im Body.
- * @param {express.Response} res - Das Response-Objekt.
+ * @param {express.Request} req - Enthält { raum, beschreibung, email, bild } im Body.
  */
 app.post("/api/reports", async (req, res) => {
-    try {
-        const { raum, beschreibung } = req.body;
+  try {
+    const { raum, beschreibung, email, bild } = req.body;
 
-        if (!raum || !beschreibung) {
-            return res.status(400).json({ message: "Raum und Beschreibung sind erforderlich." });
-        }
-
-        const newReport = new Report({
-            uuid: uuidv4(),
-            raum,
-            beschreibung,
-        });
-
-        await newReport.save();
-        console.log("📝 Neue Schadensmeldung gespeichert:", newReport);
-        res.status(201).json(newReport);
-
-    } catch (error) {
-        console.error("❌ Fehler beim Speichern der Meldung:", error);
-        res.status(500).json({ message: "Interner Serverfehler beim Speichern der Meldung." });
+    if (!raum || !beschreibung || !email) {
+      return res.status(400).json({ message: "Raum, Beschreibung und E-Mail sind erforderlich." });
     }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: "Ungültige E-Mail-Adresse." });
+    }
+
+    if (!isValidImagePayload(bild)) {
+      return res.status(400).json({ message: "Ungültiges Bildformat. Erwartet wird data:image/..." });
+    }
+
+    const newReport = new Report({
+      uuid: uuidv4(),
+      raum,
+      beschreibung,
+      email,
+      bild,
+    });
+
+    await newReport.save();
+    console.log("Neue Schadensmeldung gespeichert:", newReport.uuid);
+    res.status(201).json(newReport);
+  } catch (error) {
+    console.error("Fehler beim Speichern der Meldung:", error);
+    res.status(500).json({ message: "Interner Serverfehler beim Speichern der Meldung." });
+  }
 });
 
 /**
  * Stellt die Verbindung zur MongoDB her und startet den Express-Server.
  */
 async function startServer() {
-    console.log("Versuche, eine Verbindung zur MongoDB herzustellen...");
-    try {
-        await mongoose.connect(MONGO_URL);
-        console.log("✅ Erfolgreich mit MongoDB verbunden!");
+  console.log("Versuche, eine Verbindung zur MongoDB herzustellen...");
+  try {
+    await mongoose.connect(MONGO_URL);
+    console.log("Erfolgreich mit MongoDB verbunden!");
 
-        app.listen(PORT, () => {
-            console.log(`✅ Server läuft auf http://localhost:${PORT}`);
-        });
-
-    } catch (error) {
-        console.error("❌ Fehler beim Starten des Servers oder der DB-Verbindung:", error);
-        process.exit(1);
-    }
+    app.listen(PORT, () => {
+      console.log(`Server läuft auf http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error("Fehler beim Starten des Servers oder der DB-Verbindung:", error);
+    process.exit(1);
+  }
 }
 
 // --- Serverstart ---
