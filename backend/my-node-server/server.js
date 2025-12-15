@@ -56,6 +56,19 @@ const isValidImagePayload = (bild) => {
 // --- API-Routen ---
 
 /**
+ * Liefert alle Schadensmeldungen, neueste zuerst.
+ */
+app.get("/api/reports", async (_req, res) => {
+  try {
+    const reports = await Report.find().sort({ erstellt_am: -1 }).lean();
+    res.json(reports);
+  } catch (error) {
+    console.error("Fehler beim Abrufen der Meldungen:", error);
+    res.status(500).json({ message: "Interner Serverfehler beim Abrufen der Meldungen." });
+  }
+});
+
+/**
  * Erstellt eine neue Schadensmeldung.
  * @route POST /api/reports
  * @param {express.Request} req - Enthält { raum, beschreibung, email, bild } im Body.
