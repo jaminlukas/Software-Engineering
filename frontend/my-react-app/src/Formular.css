@@ -56,8 +56,8 @@ body, html, #root {
 }
 
 .nav-btn.active {
-  background: #10b981;
-  color: #0b1b13;
+  background: linear-gradient(90deg, var(--accent), #7c3aed);
+  color: #fff;
 }
 
 .content {
