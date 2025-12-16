@@ -33,6 +33,15 @@ function Formular() {
   const [view, setView] = useState('reporter'); // reporter | hausmeister
   const [tickets, setTickets] = useState([]);
   const [ticketsStatus, setTicketsStatus] = useState('idle'); // idle | loading | error
+  const [meta, setMeta] = useState({ total: 0, page: 1, perPage: 20 });
+
+  // Filter states
+  const [search, setSearch] = useState('');
+  const [filterRoom, setFilterRoom] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [sort, setSort] = useState('erstellt_am:desc');
 
   const isSending = status === 'sending';
 
@@ -49,11 +58,28 @@ function Formular() {
     reader.readAsDataURL(file);
   };
 
-  const fetchTickets = async () => {
+  const fetchTickets = async (opts = {}) => {
     setTicketsStatus('loading');
     try {
-      const res = await axios.get(API_URL);
-      setTickets(res.data || []);
+      const params = {
+        page: opts.page || meta.page || 1,
+        limit: opts.limit || meta.perPage || 20,
+        sort: opts.sort || sort,
+      };
+      if (search) params.q = search;
+      if (filterRoom) params.raum = filterRoom;
+      if (filterStatus) params.status = filterStatus;
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+
+      const res = await axios.get(API_URL, { params });
+      if (res.data) {
+        setTickets(res.data.data || []);
+        setMeta(res.data.meta || { total: 0, page: params.page, perPage: params.limit });
+      } else {
+        setTickets([]);
+        setMeta({ total: 0, page: params.page, perPage: params.limit });
+      }
       setTicketsStatus('idle');
     } catch (error) {
       console.error('Fehler beim Laden der Tickets:', error);
@@ -63,9 +89,19 @@ function Formular() {
 
   useEffect(() => {
     if (view === 'hausmeister') {
-      fetchTickets();
+      fetchTickets({ page: 1, limit: meta.perPage, sort });
     }
   }, [view]);
+
+  // Debounced search / filter effect
+  useEffect(() => {
+    if (view !== 'hausmeister') return undefined;
+    const t = setTimeout(() => {
+      fetchTickets({ page: 1, limit: meta.perPage, sort });
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterRoom, filterStatus, fromDate, toDate, sort]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -119,7 +155,8 @@ function Formular() {
   const updateStatus = async (uuid, newStatus) => {
     try {
       await axios.patch(`${API_URL}/${uuid}/status`, { status: newStatus });
-      setTickets((prev) => prev.map((t) => (t.uuid === uuid ? { ...t, status: newStatus } : t)));
+      // refresh current page
+      fetchTickets({ page: meta.page, limit: meta.perPage, sort });
     } catch (error) {
       console.error('Fehler beim Aktualisieren des Status:', error);
     }
@@ -203,13 +240,55 @@ function Formular() {
         {view === 'hausmeister' && (
           <div className="ticket-container">
             <h1>Gemeldete Tickets</h1>
+            <div className="filter-bar">
+              <input
+                aria-label="Suche"
+                placeholder="Suche (Beschreibung, E-Mail, Raum)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <input
+                aria-label="Raum filtern"
+                placeholder="Raum"
+                value={filterRoom}
+                onChange={(e) => setFilterRoom(e.target.value)}
+              />
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+                <option value="">Alle Status</option>
+                <option value="offen">Noch nicht angefangen</option>
+                <option value="in_bearbeitung">In Bearbeitung</option>
+                <option value="erledigt">Fertig</option>
+              </select>
+              <label className="date-label">
+                Von
+                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              </label>
+              <label className="date-label">
+                Bis
+                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              </label>
+              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                <option value="erstellt_am:desc">Neueste</option>
+                <option value="erstellt_am:asc">Älteste</option>
+                <option value="raum:asc">Raum A→Z</option>
+              </select>
+            </div>
             {ticketsStatus === 'loading' && <p className="info-text">Lade Tickets...</p>}
             {ticketsStatus === 'error' && <p className="feedback error">Fehler beim Laden der Tickets.</p>}
             {ticketsStatus === 'idle' && tickets.length === 0 && (
               <p className="info-text">Keine Tickets vorhanden.</p>
             )}
             {ticketsStatus === 'idle' && tickets.length > 0 && (
-              <div className="ticket-grid">
+              <>
+                <div className="ticket-meta">
+                  <span>Gefunden: {meta.total}</span>
+                  <div className="pagination">
+                    <button disabled={meta.page <= 1} onClick={() => fetchTickets({ page: meta.page - 1 })}>&lt; Prev</button>
+                    <span>Seite {meta.page}</span>
+                    <button disabled={meta.page * meta.perPage >= meta.total} onClick={() => fetchTickets({ page: meta.page + 1 })}>Next &gt;</button>
+                  </div>
+                </div>
+                <div className="ticket-grid">
                 {tickets.map((ticket) => (
                   <div key={ticket.uuid} className="ticket-card">
                     <div className="ticket-header">
@@ -239,6 +318,7 @@ function Formular() {
                   </div>
                 ))}
               </div>
+                </>
             )}
           </div>
         )}

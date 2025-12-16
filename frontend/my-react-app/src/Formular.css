@@ -211,6 +211,45 @@ button:hover:not(:disabled) {
   width: 100%;
 }
 
+.filter-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.filter-bar input[type="text"], .filter-bar input[type="date"], .filter-bar select {
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(15,23,42,0.08);
+}
+
+.date-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.ticket-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  color: var(--muted);
+}
+
+.pagination button {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(15,23,42,0.08);
+  background: white;
+  cursor: pointer;
+}
+
+.pagination button:disabled { opacity: 0.5; cursor: not-allowed }
+
 .ticket-grid {
   display: grid;
   grid-template-columns: 1fr;

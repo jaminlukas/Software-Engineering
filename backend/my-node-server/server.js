@@ -63,13 +63,59 @@ const isValidImagePayload = (bild) => {
  */
 app.get("/api/reports", async (_req, res) => {
   try {
-    const reports = await Report.find().sort({ erstellt_am: -1 }).lean();
-    res.json(reports);
+    const { uuid, raum, q, status, from, to, page = 1, limit = 20, sort } = _req.query;
+
+    const filter = {};
+
+    if (uuid) filter.uuid = uuid;
+    if (raum) filter.raum = { $regex: new RegExp(escapeRegex(raum), 'i') };
+    if (status) filter.status = status;
+    if (q) {
+      const qRegex = new RegExp(escapeRegex(q), 'i');
+      filter.$or = [{ beschreibung: qRegex }, { email: qRegex }, { raum: qRegex }];
+    }
+    if (from || to) {
+      filter.erstellt_am = {};
+      if (from) {
+        const fromDate = new Date(from);
+        if (!isNaN(fromDate)) filter.erstellt_am.$gte = fromDate;
+      }
+      if (to) {
+        const toDate = new Date(to);
+        if (!isNaN(toDate)) filter.erstellt_am.$lte = toDate;
+      }
+      // Remove empty date filter
+      if (Object.keys(filter.erstellt_am).length === 0) delete filter.erstellt_am;
+    }
+
+    // Pagination & sorting
+    const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+    const limitNum = Math.min(parseInt(limit, 10) || 20, 100);
+    const skip = (pageNum - 1) * limitNum;
+
+    let sortObj = { erstellt_am: -1 };
+    if (sort) {
+      // expected format: field:dir e.g. erstellt_am:desc or raum:asc
+      const [field, dir] = sort.split(':');
+      sortObj = { [field]: dir === 'asc' ? 1 : -1 };
+    }
+
+    const [data, total] = await Promise.all([
+      Report.find(filter).sort(sortObj).skip(skip).limit(limitNum).lean(),
+      Report.countDocuments(filter),
+    ]);
+
+    res.json({ data, meta: { total, page: pageNum, perPage: limitNum } });
   } catch (error) {
     console.error("Fehler beim Abrufen der Meldungen:", error);
     res.status(500).json({ message: "Interner Serverfehler beim Abrufen der Meldungen." });
   }
 });
+
+// Utility: escape user input for regex
+function escapeRegex(string) {
+  return String(string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 /**
  * Erstellt eine neue Schadensmeldung.
