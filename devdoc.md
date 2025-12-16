@@ -1,16 +1,24 @@
-## Verbindung herstellen
-1. Installation von mongodb für vscode
-2. Host ist: Localhost:27017
-3. Authentifizierung username und pw angeben
 
-## Compose ausführen
+
+# MERN-Stack: Lokale Automatisch Start-Anleitung
+
+> **Vorrausetzungen:** Docker Desktop ist instaliert und gestartet.
+ 
+## Ausführen der Anwendung
 Das Docker compose hat bereits alle schritte zum korrekten starten des DB container. Ausgeführt werden kann es durch:
-1. Navigiere in das verzeichnis in dem docker-compose.yml liegt
-2. ausführen: docker compose up -d
+1. Navigiere in einer Komandozeile in das Root-Verzeichnis in dem docker-compose.yml liegt
+2. Bei erstmaliger Aufruf der Anwendung:
+    ```bash
+    docker compose up --build -d 
+    ```
+    in der Komandozeile ausführen.  
+    Ansonsten verwenden von
+    ```bash
+    docker compose up -d
+    ```
 
-Mongodb läuft nun als im container software engineering als lokale datenbank. 
+<!-- ## Manuelles Aufsetzen des MongoDB container
 
-## Manuelles Container Aufsetzen
 >Voraussetzungen: Docker desktop installiert
 
 1. öffnen einer neuen Bash comando zeile
@@ -24,8 +32,9 @@ pw: Franki
 volumen (lokaler speicher für die Daten): mongoticket unter path data/db
 
 > Falls was schief geht einfach Container löschen und von vorne angagen
+-->
 
-# MERN-Stack: Lokale Start-Anleitung
+# MERN-Stack: Lokale Manuelle Start-Anleitung
 
 Anleitung für den Start des Stacks mit containerisierter MongoDB und lokal laufendem Backend (Express) und Frontend (React/Vite).
 
