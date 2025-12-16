@@ -9,15 +9,11 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
-import dotenv from "dotenv";
-
-// Umgebungsvariablen aus .env-Datei laden
-dotenv.config();
 
 // --- Konfiguration ---
-// PORT wird aus der .env-Datei geladen, mit einem Standardwert von 3000
+// PORT wird aus der Umgebungsvariable geladen, mit einem Standardwert von 3000
 const PORT = process.env.PORT || 3000;
-// MONGO_URL wird aus der .env-Datei geladen
+// MONGO_URL wird aus der Umgebungsvariable geladen
 const MONGO_URL = process.env.MONGO_URL;
 
 if (!MONGO_URL) {
