@@ -3,7 +3,7 @@ body, html, #root {
   padding: 0;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #f0f2f5;
+  background-color: var(--bg);
 }
 
 :root {
@@ -11,12 +11,32 @@ body, html, #root {
   --card: #ffffff;
   --muted: #6b7280;
   --text: #0f172a;
-  --accent: #06b6d4;
+  --accent: #e20074; /* Telekom Magenta */
   --success: #10b981;
   --danger: #ef4444;
   --surface-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
   --radius: 12px;
   --gap: 1rem;
+}
+
+/* Global dark mode variables applied when root has class 'dark' */
+:root.dark {
+  --bg: #071029;
+  --card: #0f1724;
+  --muted: #94a3b8;
+  --text: #e6eef8;
+  --accent: #ff6fb3;
+  --surface-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Dark mode variables applied when .page has class 'dark' */
+.page.dark {
+  --bg: #071029;
+  --card: #0f1724;
+  --muted: #94a3b8;
+  --text: #e6eef8;
+  --accent: #ff6fb3;
+  --surface-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
 .page {
@@ -29,7 +49,7 @@ body, html, #root {
 
 .sidebar {
   width: 220px;
-  background: #111827;
+  background: linear-gradient(180deg,#2b0038,#1a0028);
   color: white;
   border-radius: 10px;
   padding: 1rem;
@@ -43,7 +63,7 @@ body, html, #root {
   padding: 0.75rem 1rem;
   border-radius: 8px;
   border: 1px solid transparent;
-  background: #1f2937;
+  background: #2b0038;
   color: white;
   font-weight: 600;
   text-align: left;
@@ -52,11 +72,11 @@ body, html, #root {
 }
 
 .nav-btn:hover {
-  background: #374151;
+  background: #4b0054;
 }
 
 .nav-btn.active {
-  background: linear-gradient(90deg, var(--accent), #7c3aed);
+  background: linear-gradient(90deg, var(--accent), #ff7bbf);
   color: #fff;
 }
 
@@ -134,11 +154,38 @@ textarea {
   color: #000;
 }
 
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 800ms linear infinite;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+
+.small-spinner {
+  margin-left: 8px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.filter-bar input[disabled], .filter-bar select[disabled], .filter-bar button[disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 input:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 6px 18px rgba(6,182,212,0.06);
+  box-shadow: 0 6px 18px rgba(226,0,116,0.12);
   transform: translateY(-1px);
 }
 
@@ -153,13 +200,13 @@ button {
   padding: 0.9rem 1rem;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(90deg, var(--accent), #7c3aed);
+  background: linear-gradient(90deg, var(--accent), #ff7bbf);
   color: #fff;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
-  box-shadow: 0 6px 18px rgba(12, 74, 110, 0.08);
+  box-shadow: 0 6px 18px rgba(226,0,116,0.12);
 }
 
 button:disabled {
@@ -170,7 +217,7 @@ button:disabled {
 
 button:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 12px 30px rgba(12, 74, 110, 0.12);
+  box-shadow: 0 12px 30px rgba(226,0,116,0.16);
 }
 
 .form-actions {
@@ -204,7 +251,7 @@ button:hover:not(:disabled) {
 }
 
 .ticket-container {
-  background: white;
+  background: var(--card);
   padding: 1.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -258,10 +305,10 @@ button:hover:not(:disabled) {
 }
 
 .ticket-card {
-  border: 1px solid #e2e2e2;
+  border: 1px solid rgba(255,255,255,0.04);
   border-radius: 8px;
   padding: 1rem;
-  background: #fafafa;
+  background: var(--card);
 }
 
 .ticket-header {
@@ -275,11 +322,11 @@ button:hover:not(:disabled) {
 
 .ticket-room {
   font-weight: 700;
-  color: #1f2937;
+  color: var(--text);
 }
 
 .ticket-date {
-  color: #6b7280;
+  color: var(--muted);
   font-size: 0.9rem;
 }
 
@@ -287,12 +334,12 @@ button:hover:not(:disabled) {
 
 .ticket-desc {
   margin: 0.25rem 0;
-  color: #000;
+  color: var(--text);
 }
 
 .ticket-email {
   margin: 0.25rem 0;
-  color: #374151;
+  color: var(--muted);
   font-size: 0.95rem;
 }
 

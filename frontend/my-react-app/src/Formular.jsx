@@ -31,9 +31,18 @@ function Formular() {
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
 
   const [view, setView] = useState('reporter'); // reporter | hausmeister
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      return localStorage.getItem('darkMode') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [tickets, setTickets] = useState([]);
   const [ticketsStatus, setTicketsStatus] = useState('idle'); // idle | loading | error
   const [meta, setMeta] = useState({ total: 0, page: 1, perPage: 20 });
+  const [errorMessage, setErrorMessage] = useState('');
+  const [updatingStatuses, setUpdatingStatuses] = useState({});
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -60,6 +69,7 @@ function Formular() {
 
   const fetchTickets = async (opts = {}) => {
     setTicketsStatus('loading');
+    setErrorMessage('');
     try {
       const params = {
         page: opts.page || meta.page || 1,
@@ -83,6 +93,7 @@ function Formular() {
       setTicketsStatus('idle');
     } catch (error) {
       console.error('Fehler beim Laden der Tickets:', error);
+      setErrorMessage(error?.response?.data?.message || error.message || 'Fehler beim Laden der Tickets');
       setTicketsStatus('error');
     }
   };
@@ -143,6 +154,15 @@ function Formular() {
     setView((prev) => (prev === 'reporter' ? 'hausmeister' : 'reporter'));
   };
 
+  useEffect(() => {
+    try {
+      localStorage.setItem('darkMode', darkMode ? 'true' : 'false');
+    } catch {}
+    try {
+      document.documentElement.classList.toggle('dark', darkMode);
+    } catch {}
+  }, [darkMode]);
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     try {
@@ -153,17 +173,31 @@ function Formular() {
   };
 
   const updateStatus = async (uuid, newStatus) => {
+    // prevent concurrent updates for the same ticket
+    setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
+    const previous = tickets;
+    // optimistic update
+    setTickets((t) => t.map((x) => (x.uuid === uuid ? { ...x, status: newStatus } : x)));
     try {
       await axios.patch(`${API_URL}/${uuid}/status`, { status: newStatus });
       // refresh current page
       fetchTickets({ page: meta.page, limit: meta.perPage, sort });
     } catch (error) {
       console.error('Fehler beim Aktualisieren des Status:', error);
+      setErrorMessage(error?.response?.data?.message || 'Fehler beim Aktualisieren des Status');
+      // revert optimistic update
+      setTickets(previous);
+    } finally {
+      setUpdatingStatuses((s) => {
+        const copy = { ...s };
+        delete copy[uuid];
+        return copy;
+      });
     }
   };
 
   return (
-    <div className="page">
+    <div className={`page ${darkMode ? 'dark' : ''}`}>
       <aside className="sidebar">
         <button
           className={`nav-btn ${view === 'reporter' ? 'active' : ''}`}
@@ -177,6 +211,15 @@ function Formular() {
         >
           Hausmeister-Ansicht
         </button>
+        <div style={{ marginTop: '0.5rem' }}>
+          <button
+            className="nav-btn theme-toggle"
+            onClick={() => setDarkMode((d) => !d)}
+            aria-pressed={darkMode}
+          >
+            {darkMode ? 'Hellmodus' : 'Dunkelmodus'}
+          </button>
+        </div>
       </aside>
 
       <main className="content">
@@ -272,9 +315,12 @@ function Formular() {
                 <option value="erstellt_am:asc">Älteste</option>
                 <option value="raum:asc">Raum A→Z</option>
               </select>
+              <button type="button" onClick={() => fetchTickets({ page: 1 })} disabled={ticketsStatus === 'loading'}>Aktualisieren</button>
             </div>
-            {ticketsStatus === 'loading' && <p className="info-text">Lade Tickets...</p>}
-            {ticketsStatus === 'error' && <p className="feedback error">Fehler beim Laden der Tickets.</p>}
+            <div role="status" aria-live="polite">
+              {ticketsStatus === 'loading' && <p className="info-text">Lade Tickets... <span className="spinner"/></p>}
+              {ticketsStatus === 'error' && <p className="feedback error">{errorMessage || 'Fehler beim Laden der Tickets.'}</p>}
+            </div>
             {ticketsStatus === 'idle' && tickets.length === 0 && (
               <p className="info-text">Keine Tickets vorhanden.</p>
             )}
@@ -301,11 +347,13 @@ function Formular() {
                         <select
                           value={ticket.status || 'offen'}
                           onChange={(e) => updateStatus(ticket.uuid, e.target.value)}
+                          disabled={Boolean(updatingStatuses[ticket.uuid]) || ticketsStatus === 'loading'}
                         >
                           <option value="offen">Noch nicht angefangen</option>
                           <option value="in_bearbeitung">In Bearbeitung</option>
                           <option value="erledigt">Fertig</option>
                         </select>
+                        {updatingStatuses[ticket.uuid] && <span className="small-spinner" aria-hidden>…</span>}
                       </label>
                     </div>
                     <p className="ticket-desc">{ticket.beschreibung}</p>
