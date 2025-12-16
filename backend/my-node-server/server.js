@@ -38,6 +38,11 @@ const reportSchema = new mongoose.Schema({
   beschreibung: { type: String, required: true },
   email: { type: String, required: true },
   bild: { type: String }, // Base64 oder Data-URL
+  status: {
+    type: String,
+    enum: ['offen', 'in_bearbeitung', 'erledigt'],
+    default: 'offen',
+  },
   erstellt_am: { type: Date, default: Date.now },
 });
 
@@ -101,6 +106,32 @@ app.post("/api/reports", async (req, res) => {
   } catch (error) {
     console.error("Fehler beim Speichern der Meldung:", error);
     res.status(500).json({ message: "Interner Serverfehler beim Speichern der Meldung." });
+  }
+});
+
+/**
+ * Aktualisiert den Status einer Meldung.
+ * PATCH /api/reports/:uuid/status
+ * Body: { status: 'offen'|'in_bearbeitung'|'erledigt' }
+ */
+app.patch('/api/reports/:uuid/status', async (req, res) => {
+  try {
+    const { uuid } = req.params;
+    const { status } = req.body;
+
+    const allowed = ['offen', 'in_bearbeitung', 'erledigt'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ message: 'Ungültiger Status' });
+    }
+
+    const updated = await Report.findOneAndUpdate({ uuid }, { $set: { status } }, { new: true }).lean();
+    if (!updated) {
+      return res.status(404).json({ message: 'Meldung nicht gefunden' });
+    }
+    res.json(updated);
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren des Status:', error);
+    res.status(500).json({ message: 'Interner Serverfehler beim Aktualisieren des Status.' });
   }
 });
 

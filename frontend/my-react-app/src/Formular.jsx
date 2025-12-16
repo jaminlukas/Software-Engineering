@@ -116,6 +116,15 @@ function Formular() {
     }
   };
 
+  const updateStatus = async (uuid, newStatus) => {
+    try {
+      await axios.patch(`${API_URL}/${uuid}/status`, { status: newStatus });
+      setTickets((prev) => prev.map((t) => (t.uuid === uuid ? { ...t, status: newStatus } : t)));
+    } catch (error) {
+      console.error('Fehler beim Aktualisieren des Status:', error);
+    }
+  };
+
   return (
     <div className="page">
       <aside className="sidebar">
@@ -206,6 +215,19 @@ function Formular() {
                     <div className="ticket-header">
                       <span className="ticket-room">{ticket.raum}</span>
                       <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
+                    </div>
+                    <div className="ticket-status">
+                      <label>
+                        Status:{' '}
+                        <select
+                          value={ticket.status || 'offen'}
+                          onChange={(e) => updateStatus(ticket.uuid, e.target.value)}
+                        >
+                          <option value="offen">Noch nicht angefangen</option>
+                          <option value="in_bearbeitung">In Bearbeitung</option>
+                          <option value="erledigt">Fertig</option>
+                        </select>
+                      </label>
                     </div>
                     <p className="ticket-desc">{ticket.beschreibung}</p>
                     <p className="ticket-email">{ticket.email}</p>

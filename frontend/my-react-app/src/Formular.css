@@ -76,6 +76,8 @@ body, html, #root {
   box-sizing: border-box;
 }
 
+
+
 form {
   background: var(--card);
   padding: 2rem;
@@ -129,6 +131,7 @@ textarea {
   box-sizing: border-box;
   background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(248,250,252,0.6));
   transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
+  color: #000;
 }
 
 input:focus,
@@ -241,9 +244,11 @@ button:hover:not(:disabled) {
   font-size: 0.9rem;
 }
 
+
+
 .ticket-desc {
   margin: 0.25rem 0;
-  color: #111827;
+  color: #000;
 }
 
 .ticket-email {
@@ -278,6 +283,10 @@ button:hover:not(:disabled) {
   .ticket-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+@media (max-width: 767px) {
+  /* responsive tweaks */
 }
 
 @media (min-width: 1024px) {
