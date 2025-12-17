@@ -29,7 +29,7 @@ services:
     environment:
       # Die MONGO_URL, die das Backend zur Verbindung mit dem 'mongo'-Dienst benötigt.
       # 'mongo' ist der Hostname, der von Docker Compose im internen Netzwerk aufgelöst wird.
-      MONGO_URL: "mongodb://mongoadmin:Franki@mongo:27017/"
+      MONGO_URL: "mongodb://mongo:27017/reports"
     # Stellt sicher, dass der 'mongo'-Dienst vor dem 'backend'-Dienst gestartet wird.
     depends_on:
       - mongo

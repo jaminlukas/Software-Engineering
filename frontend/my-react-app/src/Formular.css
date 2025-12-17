@@ -149,9 +149,16 @@ textarea {
   font-size: 1rem;
   width: 100%;
   box-sizing: border-box;
-  background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(248,250,252,0.6));
+  background: var(--card);
   transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.08s ease;
-  color: #000;
+  color: var(--text);
+}
+
+.page.dark input,
+.page.dark textarea {
+  background: var(--card);
+  color: var(--text);
+  border-color: rgba(230,238,248,0.12);
 }
 
 .spinner {
@@ -291,11 +298,37 @@ button:hover:not(:disabled) {
   padding: 0.35rem 0.6rem;
   border-radius: 6px;
   border: 1px solid rgba(15,23,42,0.08);
-  background: white;
+  background: var(--card);
+  color: var(--text);
   cursor: pointer;
 }
 
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed }
+
+.page.dark .pagination button {
+  background: var(--card);
+  color: var(--text);
+  border-color: rgba(230,238,248,0.12);
+}
+
+.page.dark .filter-bar input[type="text"],
+.page.dark .filter-bar input[type="date"],
+.page.dark .filter-bar select,
+.page.dark .filter-bar label {
+  background: var(--card);
+  color: var(--text);
+  border-color: rgba(230,238,248,0.12);
+}
+
+.page.dark .date-label {
+  color: var(--muted);
+}
+
+.page.dark .filter-bar button {
+  background: var(--card);
+  color: var(--text);
+  border-color: rgba(230,238,248,0.12);
+}
 
 .ticket-grid {
   display: grid;
@@ -351,6 +384,66 @@ button:hover:not(:disabled) {
   max-width: 100%;
   border-radius: 6px;
   border: 1px solid #e5e7eb;
+}
+
+.archive-section {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.archive-button {
+  padding: 0.5rem 1rem !important;
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border: 1px solid rgba(15,23,42,0.1) !important;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.archive-button:hover:not(:disabled) {
+  background: rgba(226,0,116,0.1) !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.page.dark .archive-button {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-color: rgba(230,238,248,0.12) !important;
+}
+
+.archive-button.active {
+  background: linear-gradient(90deg, var(--accent), #ff7bbf) !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+.ticket-card.archived {
+  opacity: 0.7;
+  border-style: dashed;
+}
+
+.ticket-card .archive-btn {
+  padding: 0.35rem 0.6rem;
+  background: rgba(226,0,116,0.1);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.ticket-card .archive-btn:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.page.dark .ticket-card {
+  background: var(--card);
+  border-color: rgba(230,238,248,0.08);
 }
 
 @media (min-width: 768px) {

@@ -43,6 +43,7 @@ const reportSchema = new mongoose.Schema({
     enum: ['offen', 'in_bearbeitung', 'erledigt'],
     default: 'offen',
   },
+  archived: { type: Boolean, default: false },
   erstellt_am: { type: Date, default: Date.now },
 });
 
@@ -63,9 +64,13 @@ const isValidImagePayload = (bild) => {
  */
 app.get("/api/reports", async (_req, res) => {
   try {
-    const { uuid, raum, q, status, from, to, page = 1, limit = 20, sort } = _req.query;
+    const { uuid, raum, q, status, from, to, page = 1, limit = 20, sort, archived = false } = _req.query;
 
     const filter = {};
+
+    // Parse archived parameter - handle string values from query
+    const archivedValue = archived === 'true' ? true : archived === 'false' ? false : Boolean(archived);
+    filter.archived = archivedValue;
 
     if (uuid) filter.uuid = uuid;
     if (raum) filter.raum = { $regex: new RegExp(escapeRegex(raum), 'i') };
@@ -178,6 +183,31 @@ app.patch('/api/reports/:uuid/status', async (req, res) => {
   } catch (error) {
     console.error('Fehler beim Aktualisieren des Status:', error);
     res.status(500).json({ message: 'Interner Serverfehler beim Aktualisieren des Status.' });
+  }
+});
+
+/**
+ * Archiviert oder entarchiviert eine Meldung.
+ * PATCH /api/reports/:uuid/archive
+ * Body: { archived: true|false }
+ */
+app.patch('/api/reports/:uuid/archive', async (req, res) => {
+  try {
+    const { uuid } = req.params;
+    const { archived } = req.body;
+
+    if (typeof archived !== 'boolean') {
+      return res.status(400).json({ message: 'Ungültiger Archiv-Status (muss true oder false sein)' });
+    }
+
+    const updated = await Report.findOneAndUpdate({ uuid }, { $set: { archived } }, { new: true }).lean();
+    if (!updated) {
+      return res.status(404).json({ message: 'Meldung nicht gefunden' });
+    }
+    res.json(updated);
+  } catch (error) {
+    console.error('Fehler beim Aktualisieren des Archiv-Status:', error);
+    res.status(500).json({ message: 'Interner Serverfehler beim Aktualisieren des Archiv-Status.' });
   }
 });
 

@@ -30,7 +30,7 @@ function Formular() {
   const [imageData, setImageData] = useState('');
   const [status, setStatus] = useState('idle'); // idle | sending | success | error
 
-  const [view, setView] = useState('reporter'); // reporter | hausmeister
+  const [view, setView] = useState('reporter'); // reporter | hausmeister | archive
   const [darkMode, setDarkMode] = useState(() => {
     try {
       return localStorage.getItem('darkMode') === 'true';
@@ -43,6 +43,8 @@ function Formular() {
   const [meta, setMeta] = useState({ total: 0, page: 1, perPage: 20 });
   const [errorMessage, setErrorMessage] = useState('');
   const [updatingStatuses, setUpdatingStatuses] = useState({});
+  const [archiveTickets, setArchiveTickets] = useState([]);
+  const [archiveMeta, setArchiveMeta] = useState({ total: 0, page: 1, perPage: 20 });
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -75,6 +77,7 @@ function Formular() {
         page: opts.page || meta.page || 1,
         limit: opts.limit || meta.perPage || 20,
         sort: opts.sort || sort,
+        archived: false,
       };
       if (search) params.q = search;
       if (filterRoom) params.raum = filterRoom;
@@ -94,6 +97,37 @@ function Formular() {
     } catch (error) {
       console.error('Fehler beim Laden der Tickets:', error);
       setErrorMessage(error?.response?.data?.message || error.message || 'Fehler beim Laden der Tickets');
+      setTicketsStatus('error');
+    }
+  };
+
+  const fetchArchiveTickets = async (opts = {}) => {
+    setTicketsStatus('loading');
+    setErrorMessage('');
+    try {
+      const params = {
+        page: opts.page || archiveMeta.page || 1,
+        limit: opts.limit || archiveMeta.perPage || 20,
+        sort: sort,
+        archived: true,
+      };
+      if (search) params.q = search;
+      if (filterRoom) params.raum = filterRoom;
+      if (fromDate) params.from = fromDate;
+      if (toDate) params.to = toDate;
+
+      const res = await axios.get(API_URL, { params });
+      if (res.data) {
+        setArchiveTickets(res.data.data || []);
+        setArchiveMeta(res.data.meta || { total: 0, page: params.page, perPage: params.limit });
+      } else {
+        setArchiveTickets([]);
+        setArchiveMeta({ total: 0, page: params.page, perPage: params.limit });
+      }
+      setTicketsStatus('idle');
+    } catch (error) {
+      console.error('Fehler beim Laden der Archive-Tickets:', error);
+      setErrorMessage(error?.response?.data?.message || error.message || 'Fehler beim Laden der Archive-Tickets');
       setTicketsStatus('error');
     }
   };
@@ -196,6 +230,44 @@ function Formular() {
     }
   };
 
+  const archiveTicket = async (uuid) => {
+    setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
+    try {
+      await axios.patch(`${API_URL}/${uuid}/archive`, { archived: true });
+      // Ticket aus der aktuellen Liste entfernen
+      setTickets((t) => t.filter((x) => x.uuid !== uuid));
+      setMeta((m) => ({ ...m, total: m.total - 1 }));
+    } catch (error) {
+      console.error('Fehler beim Archivieren des Tickets:', error);
+      setErrorMessage(error?.response?.data?.message || 'Fehler beim Archivieren des Tickets');
+    } finally {
+      setUpdatingStatuses((s) => {
+        const copy = { ...s };
+        delete copy[uuid];
+        return copy;
+      });
+    }
+  };
+
+  const restoreTicket = async (uuid) => {
+    setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
+    try {
+      await axios.patch(`${API_URL}/${uuid}/archive`, { archived: false });
+      // Ticket aus der Archivliste entfernen
+      setArchiveTickets((t) => t.filter((x) => x.uuid !== uuid));
+      setArchiveMeta((m) => ({ ...m, total: m.total - 1 }));
+    } catch (error) {
+      console.error('Fehler beim Wiederherstellen des Tickets:', error);
+      setErrorMessage(error?.response?.data?.message || 'Fehler beim Wiederherstellen des Tickets');
+    } finally {
+      setUpdatingStatuses((s) => {
+        const copy = { ...s };
+        delete copy[uuid];
+        return copy;
+      });
+    }
+  };
+
   return (
     <div className={`page ${darkMode ? 'dark' : ''}`}>
       <aside className="sidebar">
@@ -210,6 +282,12 @@ function Formular() {
           onClick={() => setView('hausmeister')}
         >
           Hausmeister-Ansicht
+        </button>
+        <button
+          className={`nav-btn ${view === 'archive' ? 'active' : ''}`}
+          onClick={() => setView('archive')}
+        >
+          Archiv
         </button>
         <div style={{ marginTop: '0.5rem' }}>
           <button
@@ -363,6 +441,93 @@ function Formular() {
                         <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
                       </div>
                     )}
+                    <button 
+                      className="archive-btn"
+                      onClick={() => archiveTicket(ticket.uuid)}
+                      disabled={updatingStatuses[ticket.uuid]}
+                    >
+                      {updatingStatuses[ticket.uuid] ? 'Wird archiviert...' : 'Archivieren'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+                </>
+            )}
+          </div>
+        )}
+
+        {view === 'archive' && (
+          <div className="ticket-container">
+            <h1>Archivierte Tickets</h1>
+            <div className="filter-bar">
+              <input
+                aria-label="Suche"
+                placeholder="Suche (Beschreibung, E-Mail, Raum)"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+              <input
+                aria-label="Raum filtern"
+                placeholder="Raum"
+                value={filterRoom}
+                onChange={(e) => setFilterRoom(e.target.value)}
+              />
+              <label className="date-label">
+                Von
+                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+              </label>
+              <label className="date-label">
+                Bis
+                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+              </label>
+              <select value={sort} onChange={(e) => setSort(e.target.value)}>
+                <option value="erstellt_am:desc">Neueste</option>
+                <option value="erstellt_am:asc">Älteste</option>
+                <option value="raum:asc">Raum A→Z</option>
+              </select>
+              <button type="button" onClick={() => fetchArchiveTickets({ page: 1 })} disabled={ticketsStatus === 'loading'}>Aktualisieren</button>
+            </div>
+            <div role="status" aria-live="polite">
+              {ticketsStatus === 'loading' && <p className="info-text">Lade Archive-Tickets... <span className="spinner"/></p>}
+              {ticketsStatus === 'error' && <p className="feedback error">{errorMessage || 'Fehler beim Laden der Archive-Tickets.'}</p>}
+            </div>
+            {ticketsStatus === 'idle' && archiveTickets.length === 0 && (
+              <p className="info-text">Keine archivierten Tickets vorhanden.</p>
+            )}
+            {ticketsStatus === 'idle' && archiveTickets.length > 0 && (
+              <>
+                <div className="ticket-meta">
+                  <span>Gefunden: {archiveMeta.total}</span>
+                  <div className="pagination">
+                    <button disabled={archiveMeta.page <= 1} onClick={() => fetchArchiveTickets({ page: archiveMeta.page - 1 })}>&lt; Prev</button>
+                    <span>Seite {archiveMeta.page}</span>
+                    <button disabled={archiveMeta.page * archiveMeta.perPage >= archiveMeta.total} onClick={() => fetchArchiveTickets({ page: archiveMeta.page + 1 })}>Next &gt;</button>
+                  </div>
+                </div>
+                <div className="ticket-grid">
+                {archiveTickets.map((ticket) => (
+                  <div key={ticket.uuid} className="ticket-card archived">
+                    <div className="ticket-header">
+                      <span className="ticket-room">{ticket.raum}</span>
+                      <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
+                    </div>
+                    <div className="ticket-status">
+                      <p><strong>Status: {ticket.status === 'offen' ? 'Noch nicht angefangen' : ticket.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Fertig'}</strong></p>
+                    </div>
+                    <p className="ticket-desc">{ticket.beschreibung}</p>
+                    <p className="ticket-email">{ticket.email}</p>
+                    {ticket.bild && (
+                      <div className="ticket-image">
+                        <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
+                      </div>
+                    )}
+                    <button 
+                      className="archive-btn"
+                      onClick={() => restoreTicket(ticket.uuid)}
+                      disabled={updatingStatuses[ticket.uuid]}
+                    >
+                      {updatingStatuses[ticket.uuid] ? 'Wird wiederhergestellt...' : 'Wiederherstellen'}
+                    </button>
                   </div>
                 ))}
               </div>
