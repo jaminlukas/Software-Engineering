@@ -7,7 +7,6 @@ So wird sichergestellt, dass Reparaturen schneller eingeleitet und die Campus-In
 ## 👥 Team
 Dieses Projekt wird im Rahmen der Hochschule von folgenden Personen entwickelt:
 
-- Lukas (ohne s)  
 - Luka (mit s)  
 - Benjamin (ohne Ben)  
 - Felix (mit x)
