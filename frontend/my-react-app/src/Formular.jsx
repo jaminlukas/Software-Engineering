@@ -1,6 +1,6 @@
 /**
  * @file Formular.jsx
- * @description Enthält die React-Komponente für Schadensmeldung und Hausmeister-Ansicht.
+ * @description Enthält die React-Komponente für Schadensmeldung und Hausmeister-/Archiv-Ansicht.
  */
 
 import { useEffect, useState } from 'react';
@@ -10,9 +10,6 @@ import './Formular.css';
 const API_URL = '/api/reports';
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Feedback-Anzeige für Form-Status.
- */
 const FeedbackPanel = ({ status }) => {
   if (status === 'success') {
     return <p className="feedback success">Meldung erfolgreich gesendet!</p>;
@@ -45,6 +42,7 @@ function Formular() {
   const [updatingStatuses, setUpdatingStatuses] = useState({});
   const [archiveTickets, setArchiveTickets] = useState([]);
   const [archiveMeta, setArchiveMeta] = useState({ total: 0, page: 1, perPage: 20 });
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -136,9 +134,11 @@ function Formular() {
     if (view === 'hausmeister') {
       fetchTickets({ page: 1, limit: meta.perPage, sort });
     }
+    if (view === 'archive') {
+      fetchArchiveTickets({ page: 1, limit: archiveMeta.perPage, sort });
+    }
   }, [view]);
 
-  // Debounced search / filter effect
   useEffect(() => {
     if (view !== 'hausmeister') return undefined;
     const t = setTimeout(() => {
@@ -186,6 +186,7 @@ function Formular() {
 
   const handleToggleView = () => {
     setView((prev) => (prev === 'reporter' ? 'hausmeister' : 'reporter'));
+    setSelectedTicket(null);
   };
 
   useEffect(() => {
@@ -207,19 +208,15 @@ function Formular() {
   };
 
   const updateStatus = async (uuid, newStatus) => {
-    // prevent concurrent updates for the same ticket
     setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
     const previous = tickets;
-    // optimistic update
     setTickets((t) => t.map((x) => (x.uuid === uuid ? { ...x, status: newStatus } : x)));
     try {
       await axios.patch(`${API_URL}/${uuid}/status`, { status: newStatus });
-      // refresh current page
       fetchTickets({ page: meta.page, limit: meta.perPage, sort });
     } catch (error) {
       console.error('Fehler beim Aktualisieren des Status:', error);
       setErrorMessage(error?.response?.data?.message || 'Fehler beim Aktualisieren des Status');
-      // revert optimistic update
       setTickets(previous);
     } finally {
       setUpdatingStatuses((s) => {
@@ -234,7 +231,6 @@ function Formular() {
     setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
     try {
       await axios.patch(`${API_URL}/${uuid}/archive`, { archived: true });
-      // Ticket aus der aktuellen Liste entfernen
       setTickets((t) => t.filter((x) => x.uuid !== uuid));
       setMeta((m) => ({ ...m, total: m.total - 1 }));
     } catch (error) {
@@ -253,7 +249,6 @@ function Formular() {
     setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
     try {
       await axios.patch(`${API_URL}/${uuid}/archive`, { archived: false });
-      // Ticket aus der Archivliste entfernen
       setArchiveTickets((t) => t.filter((x) => x.uuid !== uuid));
       setArchiveMeta((m) => ({ ...m, total: m.total - 1 }));
     } catch (error) {
@@ -391,7 +386,7 @@ function Formular() {
               <select value={sort} onChange={(e) => setSort(e.target.value)}>
                 <option value="erstellt_am:desc">Neueste</option>
                 <option value="erstellt_am:asc">Älteste</option>
-                <option value="raum:asc">Raum A→Z</option>
+                <option value="raum:asc">Raum A-Z</option>
               </select>
               <button type="button" onClick={() => fetchTickets({ page: 1 })} disabled={ticketsStatus === 'loading'}>Aktualisieren</button>
             </div>
@@ -413,45 +408,52 @@ function Formular() {
                   </div>
                 </div>
                 <div className="ticket-grid">
-                {tickets.map((ticket) => (
-                  <div key={ticket.uuid} className="ticket-card">
-                    <div className="ticket-header">
-                      <span className="ticket-room">{ticket.raum}</span>
-                      <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
-                    </div>
-                    <div className="ticket-status">
-                      <label>
-                        Status:{' '}
-                        <select
-                          value={ticket.status || 'offen'}
-                          onChange={(e) => updateStatus(ticket.uuid, e.target.value)}
-                          disabled={Boolean(updatingStatuses[ticket.uuid]) || ticketsStatus === 'loading'}
-                        >
-                          <option value="offen">Noch nicht angefangen</option>
-                          <option value="in_bearbeitung">In Bearbeitung</option>
-                          <option value="erledigt">Fertig</option>
-                        </select>
-                        {updatingStatuses[ticket.uuid] && <span className="small-spinner" aria-hidden>…</span>}
-                      </label>
-                    </div>
-                    <p className="ticket-desc">{ticket.beschreibung}</p>
-                    <p className="ticket-email">{ticket.email}</p>
-                    {ticket.bild && (
-                      <div className="ticket-image">
-                        <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
-                      </div>
-                    )}
-                    <button 
-                      className="archive-btn"
-                      onClick={() => archiveTicket(ticket.uuid)}
-                      disabled={updatingStatuses[ticket.uuid]}
+                  {tickets.map((ticket) => (
+                    <div
+                      key={ticket.uuid}
+                      className="ticket-card"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedTicket(ticket)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedTicket(ticket); }}
                     >
-                      {updatingStatuses[ticket.uuid] ? 'Wird archiviert...' : 'Archivieren'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-                </>
+                      <div className="ticket-header">
+                        <span className="ticket-room">{ticket.raum}</span>
+                        <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
+                      </div>
+                      <div className="ticket-status" onClick={(e) => e.stopPropagation()}>
+                        <label>
+                          Status:{' '}
+                          <select
+                            value={ticket.status || 'offen'}
+                            onChange={(e) => updateStatus(ticket.uuid, e.target.value)}
+                            disabled={Boolean(updatingStatuses[ticket.uuid]) || ticketsStatus === 'loading'}
+                          >
+                            <option value="offen">Noch nicht angefangen</option>
+                            <option value="in_bearbeitung">In Bearbeitung</option>
+                            <option value="erledigt">Fertig</option>
+                          </select>
+                          {updatingStatuses[ticket.uuid] && <span className="small-spinner" aria-hidden>⏳</span>}
+                        </label>
+                      </div>
+                      <p className="ticket-desc">{ticket.beschreibung}</p>
+                      <p className="ticket-email">{ticket.email}</p>
+                      {ticket.bild && (
+                        <div className="ticket-image">
+                          <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
+                        </div>
+                      )}
+                      <button
+                        className="archive-btn"
+                        onClick={(e) => { e.stopPropagation(); archiveTicket(ticket.uuid); }}
+                        disabled={updatingStatuses[ticket.uuid]}
+                      >
+                        {updatingStatuses[ticket.uuid] ? 'Wird archiviert...' : 'Archivieren'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
@@ -483,7 +485,7 @@ function Formular() {
               <select value={sort} onChange={(e) => setSort(e.target.value)}>
                 <option value="erstellt_am:desc">Neueste</option>
                 <option value="erstellt_am:asc">Älteste</option>
-                <option value="raum:asc">Raum A→Z</option>
+                <option value="raum:asc">Raum A-Z</option>
               </select>
               <button type="button" onClick={() => fetchArchiveTickets({ page: 1 })} disabled={ticketsStatus === 'loading'}>Aktualisieren</button>
             </div>
@@ -505,34 +507,66 @@ function Formular() {
                   </div>
                 </div>
                 <div className="ticket-grid">
-                {archiveTickets.map((ticket) => (
-                  <div key={ticket.uuid} className="ticket-card archived">
-                    <div className="ticket-header">
-                      <span className="ticket-room">{ticket.raum}</span>
-                      <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
-                    </div>
-                    <div className="ticket-status">
-                      <p><strong>Status: {ticket.status === 'offen' ? 'Noch nicht angefangen' : ticket.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Fertig'}</strong></p>
-                    </div>
-                    <p className="ticket-desc">{ticket.beschreibung}</p>
-                    <p className="ticket-email">{ticket.email}</p>
-                    {ticket.bild && (
-                      <div className="ticket-image">
-                        <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
-                      </div>
-                    )}
-                    <button 
-                      className="archive-btn"
-                      onClick={() => restoreTicket(ticket.uuid)}
-                      disabled={updatingStatuses[ticket.uuid]}
+                  {archiveTickets.map((ticket) => (
+                    <div
+                      key={ticket.uuid}
+                      className="ticket-card archived"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedTicket(ticket)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedTicket(ticket); }}
                     >
-                      {updatingStatuses[ticket.uuid] ? 'Wird wiederhergestellt...' : 'Wiederherstellen'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-                </>
+                      <div className="ticket-header">
+                        <span className="ticket-room">{ticket.raum}</span>
+                        <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
+                      </div>
+                      <div className="ticket-status">
+                        <p><strong>Status: {ticket.status === 'offen' ? 'Noch nicht angefangen' : ticket.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Fertig'}</strong></p>
+                      </div>
+                      <p className="ticket-desc">{ticket.beschreibung}</p>
+                      <p className="ticket-email">{ticket.email}</p>
+                      {ticket.bild && (
+                        <div className="ticket-image">
+                          <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
+                        </div>
+                      )}
+                      <button
+                        className="archive-btn"
+                        onClick={(e) => { e.stopPropagation(); restoreTicket(ticket.uuid); }}
+                        disabled={updatingStatuses[ticket.uuid]}
+                      >
+                        {updatingStatuses[ticket.uuid] ? 'Wird wiederhergestellt...' : 'Wiederherstellen'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
+          </div>
+        )}
+
+        {selectedTicket && (
+          <div className="modal-backdrop" onClick={() => setSelectedTicket(null)}>
+            <div className="modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>Ticket-Details</h2>
+                <button className="close-btn" onClick={() => setSelectedTicket(null)} aria-label="Schließen">×</button>
+              </div>
+              <div className="modal-body">
+                <p><strong>Raum:</strong> {selectedTicket.raum}</p>
+                <p><strong>E-Mail:</strong> {selectedTicket.email}</p>
+                <p><strong>Erstellt am:</strong> {formatDate(selectedTicket.erstellt_am)}</p>
+                {selectedTicket.status && <p><strong>Status:</strong> {selectedTicket.status}</p>}
+                {selectedTicket.archived && <p><strong>Archiviert:</strong> Ja</p>}
+                <p><strong>Beschreibung:</strong></p>
+                <p className="modal-desc">{selectedTicket.beschreibung}</p>
+                {selectedTicket.bild && (
+                  <div className="modal-image">
+                    <img src={selectedTicket.bild} alt={`Ticket ${selectedTicket.uuid}`} />
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
       </main>

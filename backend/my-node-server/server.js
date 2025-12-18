@@ -9,6 +9,10 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
+import dotenv from "dotenv";
+
+// Umgebungsvariablen aus der lokalen .env-Datei laden (pfadsicher)
+dotenv.config({ path: new URL("./.env", import.meta.url) });
 
 // --- Konfiguration ---
 // PORT wird aus der Umgebungsvariable geladen, mit einem Standardwert von 3000
