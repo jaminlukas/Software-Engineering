@@ -4,7 +4,6 @@
  * Initialisiert den Express-Server, stellt die Verbindung zur MongoDB her
  * und definiert die API-Endpunkte.
  */
-
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
@@ -30,7 +29,6 @@ const app = express();
 
 // --- Middleware ---
 app.use(cors());
-// Erhöhtes Limit erlaubt Base64-kodierte Bilder im JSON-Body
 app.use(express.json({ limit: "5mb" }));
 
 /**
