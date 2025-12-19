@@ -5,28 +5,14 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import './Formular.css';
+import Sidebar from './components/Sidebar';
+import DamageReportForm from './components/DamageReportForm';
+import TicketListView from './components/HausmeisterView';
+import TicketDetailsModal from './components/TicketDetailsView';
 
 const API_URL = '/api/reports';
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-const FeedbackPanel = ({ status }) => {
-  if (status === 'success') {
-    return <p className="feedback success">Meldung erfolgreich gesendet!</p>;
-  }
-  if (status === 'error') {
-    return <p className="feedback error">Fehler beim Senden. Bitte prüfe deine Eingaben.</p>;
-  }
-  return null;
-};
 
 function Formular() {
-  const [room, setRoom] = useState('');
-  const [description, setDescription] = useState('');
-  const [email, setEmail] = useState('');
-  const [imageData, setImageData] = useState('');
-  const [status, setStatus] = useState('idle'); // idle | sending | success | error
-
   const [view, setView] = useState('reporter'); // reporter | hausmeister | archive
   const [darkMode, setDarkMode] = useState(() => {
     try {
@@ -51,21 +37,6 @@ function Formular() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [sort, setSort] = useState('erstellt_am:desc');
-
-  const isSending = status === 'sending';
-
-  const handleFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      setImageData('');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageData(reader.result?.toString() || '');
-    };
-    reader.readAsDataURL(file);
-  };
 
   const fetchTickets = async (opts = {}) => {
     setTicketsStatus('loading');
@@ -148,47 +119,6 @@ function Formular() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, filterRoom, filterStatus, fromDate, toDate, sort]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (!emailRegex.test(email)) {
-      setStatus('error');
-      return;
-    }
-
-    setStatus('sending');
-
-    try {
-      const response = await axios.post(API_URL, {
-        raum: room,
-        beschreibung: description,
-        email,
-        bild: imageData,
-      });
-
-      if (response.status === 201) {
-        setStatus('success');
-        setRoom('');
-        setDescription('');
-        setEmail('');
-        setImageData('');
-        if (view === 'hausmeister') {
-          fetchTickets();
-        }
-        setTimeout(() => setStatus('idle'), 3000);
-      } else {
-        setStatus('error');
-      }
-    } catch (error) {
-      console.error('Fehler beim Senden der Daten:', error);
-      setStatus('error');
-    }
-  };
-
-  const handleToggleView = () => {
-    setView((prev) => (prev === 'reporter' ? 'hausmeister' : 'reporter'));
-    setSelectedTicket(null);
-  };
-
   useEffect(() => {
     try {
       localStorage.setItem('darkMode', darkMode ? 'true' : 'false');
@@ -197,15 +127,6 @@ function Formular() {
       document.documentElement.classList.toggle('dark', darkMode);
     } catch {}
   }, [darkMode]);
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return dateString;
-    }
-  };
 
   const updateStatus = async (uuid, newStatus) => {
     setUpdatingStatuses((s) => ({ ...s, [uuid]: true }));
@@ -265,310 +186,66 @@ function Formular() {
 
   return (
     <div className={`page ${darkMode ? 'dark' : ''}`}>
-      <aside className="sidebar">
-        <button
-          className={`nav-btn ${view === 'reporter' ? 'active' : ''}`}
-          onClick={() => setView('reporter')}
-        >
-          Schaden melden
-        </button>
-        <button
-          className={`nav-btn ${view === 'hausmeister' ? 'active' : ''}`}
-          onClick={() => setView('hausmeister')}
-        >
-          Hausmeister-Ansicht
-        </button>
-        <button
-          className={`nav-btn ${view === 'archive' ? 'active' : ''}`}
-          onClick={() => setView('archive')}
-        >
-          Archiv
-        </button>
-        <div style={{ marginTop: '0.5rem' }}>
-          <button
-            className="nav-btn theme-toggle"
-            onClick={() => setDarkMode((d) => !d)}
-            aria-pressed={darkMode}
-          >
-            {darkMode ? 'Hellmodus' : 'Dunkelmodus'}
-          </button>
-        </div>
-      </aside>
+      <Sidebar view={view} setView={setView} darkMode={darkMode} setDarkMode={setDarkMode} />
 
       <main className="content">
         {view === 'reporter' && (
-          <div className="form-container">
-            <form onSubmit={handleSubmit}>
-              <h1>Schaden melden</h1>
-              <div className="form-group">
-                <label htmlFor="room">Raum oder Ort</label>
-                <input
-                  type="text"
-                  id="room"
-                  value={room}
-                  onChange={(e) => setRoom(e.target.value)}
-                  placeholder="z.B. Raum 3.10, Bibliothek"
-                  required
-                  disabled={isSending}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="email">E-Mail</label>
-                <input
-                  type="email"
-                  id="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="z.B. name@hochschule.de"
-                  required
-                  disabled={isSending}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="description">Beschreibung des Schadens</label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="z.B. Beamer funktioniert nicht, Stuhlbein gebrochen"
-                  required
-                  disabled={isSending}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="image">Bild hinzufügen (optional)</label>
-                <input
-                  type="file"
-                  id="image"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  disabled={isSending}
-                />
-              </div>
-              <button type="submit" disabled={isSending}>
-                {isSending ? 'Wird gesendet...' : 'Meldung absenden'}
-              </button>
-              <FeedbackPanel status={status} />
-            </form>
-          </div>
+          <DamageReportForm onSuccess={() => (view === 'hausmeister' ? fetchTickets() : null)} />
         )}
-
         {view === 'hausmeister' && (
-          <div className="ticket-container">
-            <h1>Gemeldete Tickets</h1>
-            <div className="filter-bar">
-              <input
-                aria-label="Suche"
-                placeholder="Suche (Beschreibung, E-Mail, Raum)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <input
-                aria-label="Raum filtern"
-                placeholder="Raum"
-                value={filterRoom}
-                onChange={(e) => setFilterRoom(e.target.value)}
-              />
-              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                <option value="">Alle Status</option>
-                <option value="offen">Noch nicht angefangen</option>
-                <option value="in_bearbeitung">In Bearbeitung</option>
-                <option value="erledigt">Fertig</option>
-              </select>
-              <label className="date-label">
-                Von
-                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              </label>
-              <label className="date-label">
-                Bis
-                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-              </label>
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="erstellt_am:desc">Neueste</option>
-                <option value="erstellt_am:asc">Älteste</option>
-                <option value="raum:asc">Raum A-Z</option>
-              </select>
-              <button type="button" onClick={() => fetchTickets({ page: 1 })} disabled={ticketsStatus === 'loading'}>Aktualisieren</button>
-            </div>
-            <div role="status" aria-live="polite">
-              {ticketsStatus === 'loading' && <p className="info-text">Lade Tickets... <span className="spinner"/></p>}
-              {ticketsStatus === 'error' && <p className="feedback error">{errorMessage || 'Fehler beim Laden der Tickets.'}</p>}
-            </div>
-            {ticketsStatus === 'idle' && tickets.length === 0 && (
-              <p className="info-text">Keine Tickets vorhanden.</p>
-            )}
-            {ticketsStatus === 'idle' && tickets.length > 0 && (
-              <>
-                <div className="ticket-meta">
-                  <span>Gefunden: {meta.total}</span>
-                  <div className="pagination">
-                    <button disabled={meta.page <= 1} onClick={() => fetchTickets({ page: meta.page - 1 })}>&lt; Prev</button>
-                    <span>Seite {meta.page}</span>
-                    <button disabled={meta.page * meta.perPage >= meta.total} onClick={() => fetchTickets({ page: meta.page + 1 })}>Next &gt;</button>
-                  </div>
-                </div>
-                <div className="ticket-grid">
-                  {tickets.map((ticket) => (
-                    <div
-                      key={ticket.uuid}
-                      className="ticket-card"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedTicket(ticket)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedTicket(ticket); }}
-                    >
-                      <div className="ticket-header">
-                        <span className="ticket-room">{ticket.raum}</span>
-                        <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
-                      </div>
-                      <div className="ticket-status" onClick={(e) => e.stopPropagation()}>
-                        <label>
-                          Status:{' '}
-                          <select
-                            value={ticket.status || 'offen'}
-                            onChange={(e) => updateStatus(ticket.uuid, e.target.value)}
-                            disabled={Boolean(updatingStatuses[ticket.uuid]) || ticketsStatus === 'loading'}
-                          >
-                            <option value="offen">Noch nicht angefangen</option>
-                            <option value="in_bearbeitung">In Bearbeitung</option>
-                            <option value="erledigt">Fertig</option>
-                          </select>
-                          {updatingStatuses[ticket.uuid] && <span className="small-spinner" aria-hidden>⏳</span>}
-                        </label>
-                      </div>
-                      <p className="ticket-desc">{ticket.beschreibung}</p>
-                      <p className="ticket-email">{ticket.email}</p>
-                      {ticket.bild && (
-                        <div className="ticket-image">
-                          <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
-                        </div>
-                      )}
-                      <button
-                        className="archive-btn"
-                        onClick={(e) => { e.stopPropagation(); archiveTicket(ticket.uuid); }}
-                        disabled={updatingStatuses[ticket.uuid]}
-                      >
-                        {updatingStatuses[ticket.uuid] ? 'Wird archiviert...' : 'Archivieren'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <TicketListView
+            title="Gemeldete Tickets"
+            tickets={tickets}
+            ticketsStatus={ticketsStatus}
+            meta={meta}
+            errorMessage={errorMessage}
+            search={search}
+            setSearch={setSearch}
+            filterRoom={filterRoom}
+            setFilterRoom={setFilterRoom}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
+            sort={sort}
+            setSort={setSort}
+            fetchTickets={fetchTickets}
+            onUpdateStatus={updateStatus}
+            onArchive={archiveTicket}
+            onTicketClick={setSelectedTicket}
+            updatingStatuses={updatingStatuses}
+            isArchived={false}
+          />
         )}
-
         {view === 'archive' && (
-          <div className="ticket-container">
-            <h1>Archivierte Tickets</h1>
-            <div className="filter-bar">
-              <input
-                aria-label="Suche"
-                placeholder="Suche (Beschreibung, E-Mail, Raum)"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-              <input
-                aria-label="Raum filtern"
-                placeholder="Raum"
-                value={filterRoom}
-                onChange={(e) => setFilterRoom(e.target.value)}
-              />
-              <label className="date-label">
-                Von
-                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
-              </label>
-              <label className="date-label">
-                Bis
-                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
-              </label>
-              <select value={sort} onChange={(e) => setSort(e.target.value)}>
-                <option value="erstellt_am:desc">Neueste</option>
-                <option value="erstellt_am:asc">Älteste</option>
-                <option value="raum:asc">Raum A-Z</option>
-              </select>
-              <button type="button" onClick={() => fetchArchiveTickets({ page: 1 })} disabled={ticketsStatus === 'loading'}>Aktualisieren</button>
-            </div>
-            <div role="status" aria-live="polite">
-              {ticketsStatus === 'loading' && <p className="info-text">Lade Archive-Tickets... <span className="spinner"/></p>}
-              {ticketsStatus === 'error' && <p className="feedback error">{errorMessage || 'Fehler beim Laden der Archive-Tickets.'}</p>}
-            </div>
-            {ticketsStatus === 'idle' && archiveTickets.length === 0 && (
-              <p className="info-text">Keine archivierten Tickets vorhanden.</p>
-            )}
-            {ticketsStatus === 'idle' && archiveTickets.length > 0 && (
-              <>
-                <div className="ticket-meta">
-                  <span>Gefunden: {archiveMeta.total}</span>
-                  <div className="pagination">
-                    <button disabled={archiveMeta.page <= 1} onClick={() => fetchArchiveTickets({ page: archiveMeta.page - 1 })}>&lt; Prev</button>
-                    <span>Seite {archiveMeta.page}</span>
-                    <button disabled={archiveMeta.page * archiveMeta.perPage >= archiveMeta.total} onClick={() => fetchArchiveTickets({ page: archiveMeta.page + 1 })}>Next &gt;</button>
-                  </div>
-                </div>
-                <div className="ticket-grid">
-                  {archiveTickets.map((ticket) => (
-                    <div
-                      key={ticket.uuid}
-                      className="ticket-card archived"
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSelectedTicket(ticket)}
-                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedTicket(ticket); }}
-                    >
-                      <div className="ticket-header">
-                        <span className="ticket-room">{ticket.raum}</span>
-                        <span className="ticket-date">{formatDate(ticket.erstellt_am)}</span>
-                      </div>
-                      <div className="ticket-status">
-                        <p><strong>Status: {ticket.status === 'offen' ? 'Noch nicht angefangen' : ticket.status === 'in_bearbeitung' ? 'In Bearbeitung' : 'Fertig'}</strong></p>
-                      </div>
-                      <p className="ticket-desc">{ticket.beschreibung}</p>
-                      <p className="ticket-email">{ticket.email}</p>
-                      {ticket.bild && (
-                        <div className="ticket-image">
-                          <img src={ticket.bild} alt={`Ticket ${ticket.uuid}`} />
-                        </div>
-                      )}
-                      <button
-                        className="archive-btn"
-                        onClick={(e) => { e.stopPropagation(); restoreTicket(ticket.uuid); }}
-                        disabled={updatingStatuses[ticket.uuid]}
-                      >
-                        {updatingStatuses[ticket.uuid] ? 'Wird wiederhergestellt...' : 'Wiederherstellen'}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          <TicketListView
+            title="Archivierte Tickets"
+            tickets={archiveTickets}
+            ticketsStatus={ticketsStatus}
+            meta={archiveMeta}
+            errorMessage={errorMessage}
+            search={search}
+            setSearch={setSearch}
+            filterRoom={filterRoom}
+            setFilterRoom={setFilterRoom}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            fromDate={fromDate}
+            setFromDate={setFromDate}
+            toDate={toDate}
+            setToDate={setToDate}
+            sort={sort}
+            setSort={setSort}
+            fetchTickets={fetchArchiveTickets}
+            onRestore={restoreTicket}
+            onTicketClick={setSelectedTicket}
+            updatingStatuses={updatingStatuses}
+            isArchived={true}
+          />
         )}
-
-        {selectedTicket && (
-          <div className="modal-backdrop" onClick={() => setSelectedTicket(null)}>
-            <div className="modal" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <h2>Ticket-Details</h2>
-                <button className="close-btn" onClick={() => setSelectedTicket(null)} aria-label="Schließen">×</button>
-              </div>
-              <div className="modal-body">
-                <p><strong>Raum:</strong> {selectedTicket.raum}</p>
-                <p><strong>E-Mail:</strong> {selectedTicket.email}</p>
-                <p><strong>Erstellt am:</strong> {formatDate(selectedTicket.erstellt_am)}</p>
-                {selectedTicket.status && <p><strong>Status:</strong> {selectedTicket.status}</p>}
-                {selectedTicket.archived && <p><strong>Archiviert:</strong> Ja</p>}
-                <p><strong>Beschreibung:</strong></p>
-                <p className="modal-desc">{selectedTicket.beschreibung}</p>
-                {selectedTicket.bild && (
-                  <div className="modal-image">
-                    <img src={selectedTicket.bild} alt={`Ticket ${selectedTicket.uuid}`} />
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <TicketDetailsModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
       </main>
     </div>
   );
