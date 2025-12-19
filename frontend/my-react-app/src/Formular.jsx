@@ -9,6 +9,7 @@ import Sidebar from './components/Sidebar';
 import DamageReportForm from './components/DamageReportForm';
 import TicketListView from './components/HausmeisterView';
 import TicketDetailsModal from './components/TicketDetailsView';
+import TicketDetailsView from './components/TicketDetailsView';
 
 const API_URL = '/api/reports';
 
@@ -245,7 +246,7 @@ function Formular() {
             isArchived={true}
           />
         )}
-        <TicketDetailsModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+        <TicketDetailsView ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
       </main>
     </div>
   );
