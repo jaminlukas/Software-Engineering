@@ -52,7 +52,7 @@ describe('escapeRegex', () => {
   });
 
   it('sollte mit Zahlen umgehen können', () => {
-    expect(escapeRegex(123)).toBe('123'); // String(123) wird "123"
+    expect(escapeRegex(123)).toBe('123');
   });
 
   it('sollte mit null und undefined umgehen können', () => {
