@@ -4,20 +4,19 @@
  * Initialisiert den Express-Server, stellt die Verbindung zur MongoDB her
  * und definiert die API-Endpunkte.
  */
-
 import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import dotenv from "dotenv";
+import { fileURLToPath } from 'url';
+import { isValidEmail, isValidImagePayload, escapeRegex } from './utils.js';
 
 // Umgebungsvariablen aus der lokalen .env-Datei laden (pfadsicher)
 dotenv.config({ path: new URL("./.env", import.meta.url) });
 
 // --- Konfiguration ---
-// PORT wird aus der Umgebungsvariable geladen, mit einem Standardwert von 3000
 const PORT = process.env.PORT || 3000;
-// MONGO_URL wird aus der Umgebungsvariable geladen
 const MONGO_URL = process.env.MONGO_URL;
 
 if (!MONGO_URL) {
@@ -30,7 +29,6 @@ const app = express();
 
 // --- Middleware ---
 app.use(cors());
-// Erhöhtes Limit erlaubt Base64-kodierte Bilder im JSON-Body
 app.use(express.json({ limit: "5mb" }));
 
 /**
@@ -53,13 +51,6 @@ const reportSchema = new mongoose.Schema({
 
 const Report = mongoose.model("Report", reportSchema, "reports");
 
-// --- Hilfsfunktionen ---
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isValidImagePayload = (bild) => {
-  if (!bild) return true; // optional
-  if (typeof bild !== "string") return false;
-  return bild.startsWith("data:image/");
-};
 
 // --- API-Routen ---
 
@@ -121,10 +112,7 @@ app.get("/api/reports", async (_req, res) => {
   }
 });
 
-// Utility: escape user input for regex
-function escapeRegex(string) {
-  return String(string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+
 
 /**
  * Erstellt eine neue Schadensmeldung.
@@ -234,4 +222,11 @@ async function startServer() {
 }
 
 // --- Serverstart ---
-startServer();
+// Dieser Block wird nur ausgeführt, wenn das Skript direkt gestartet wird.
+const __filename = fileURLToPath(import.meta.url);
+if (process.argv[1] === __filename) {
+    startServer();
+}
+
+export default app;
+

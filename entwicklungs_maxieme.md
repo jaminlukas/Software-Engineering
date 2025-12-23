@@ -133,6 +133,14 @@ function sendEmail(report) { ... }
 
 ### Kommentare
 
+- **JSdocString** Jede methode bzw. Funktion sollte einen doc String nach dem folgenden format habe. Er stellt klar was die Funktion tut und welche Parameter als In / Output verwendet werden.
+  ```jsx
+  /**
+  * Kurze Beschreibung der Komponente.
+  * @param {{name: string, role: string}} props
+  */
+  ```
+
 - **Kommentare erklären das *Warum*, nicht das *Was***: Guter Code ist selbsterklärend. Kommentare sollten nur dann verwendet werden, wenn die Logik komplex ist und eine Erklärung benötigt, warum sie auf eine bestimmte Weise implementiert wurde.
 - **Vermeide auskommentierten Code:** Auskommentierter Code sollte gelöscht werden. Versionskontrollsysteme wie Git können alte Versionen wiederherstellen.
 
@@ -197,7 +205,19 @@ Wir verwenden ein einfaches, aber robustes Branching-Modell, um die Entwicklung 
 
 - **Start:** Ein neuer Feature-Branch wird immer vom aktuellen `develop`-Branch abgezweigt (`git switch -c feature/mein-feature`).
 - **Entwicklung:** Commits werden regelmäßig auf dem Feature-Branch gemacht.
-- **Abschluss:** Wenn das Feature fertig ist, wird der Branch per Pull Request zurück in `develop` gemerged.
+- **Abschluss:** Wenn das Feature fertig ist, wird der Feature-Branch in den develob Branch gemerged / rebased. Dazu:  
+  1. auf dem Aktuellen Feature branch alle änderungen des Develop Branches holen (Code Branch)
+      ```bash
+      git checkout feature-branch
+      git pull origin Code
+      ```
+  2. Manuelles Lösen von eventuellen Merge Konfilikten. Diese Passieren auf dem Feature Branch und kolidieren somit nicht mit dem Entwicklungscode der Anwendung.
+  3. Pushen des Konfiliktfreien Feature Branch
+      ```bash
+      git push origin feature-branch
+      ```
+  4. Erstellen eines Pull Request in Github zum mergen des Feature Branches in den Entwicklungs (Code) Branch.
+  Source: feature-branch und Target: code
 
 ### Schaubild: Branch-Architektur
 
