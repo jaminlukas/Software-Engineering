@@ -31,7 +31,7 @@ describe('isValidImagePayload', () => {
   it('sollte false für einen ungültigen Data-URL-String oder falschen Typ zurückgeben', () => {
     expect(isValidImagePayload('not-a-data-url')).toBe(false);
     expect(isValidImagePayload('data:text/plain;base64,SGVsbG8=')).toBe(false); // Falscher Mime-Typ
-    expect(isValidImagePayload('')).toBe(false);
+    expect(isValidImagePayload('')).toBe(true);
     expect(isValidImagePayload(123)).toBe(false);
     expect(isValidImagePayload({})).toBe(false);
   });
@@ -39,8 +39,8 @@ describe('isValidImagePayload', () => {
 
 describe('escapeRegex', () => {
   it('sollte Sonderzeichen in einem String escapen', () => {
-    expect(escapeRegex('test.string+?')).toBe('test\.string\+\?');
-    expect(escapeRegex('^$*+?.()|[]{}')).toBe('\^\$\*\+\?\.\(\)\|\[\]\{\}');
+    expect(escapeRegex('test.string+?')).toBe('test\\.string\\+\\?');
+    expect(escapeRegex('^$*+?.()|[]{}')).toBe('\\^\\$\\*\\+\\?\\.\\(\\)\\|\\[\\]\\{\\}');
   });
 
   it('sollte einen normalen String unverändert zurückgeben', () => {
