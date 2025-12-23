@@ -2,33 +2,43 @@ name: RunTestsBackend
 
 # Trigger 
 on:
- pull_request:
-   branches:
-     - main
-     - Code
+  pull_request:
+    branches:
+      - main
+      - Code
 
 # Jobs to be executed
 jobs:
-tests:
-  runs-on: ubuntu-latest
-  container:
-    image: node:22
-  # Steps to execute for job 'tests'
-  steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v3
+  tests:
+    runs-on: ubuntu-latest
+    
+    # Steps to execute for job 'tests'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
 
-    - name: Set up Node.js Server environment
-      run: npm ci
-      working-directory: ./backend/my-node-server
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
 
-    - name: build the Application
-      run: docker-compose up --build -d
+      - name: Install Dependencies
+        run: npm ci
+        working-directory: ./backend/my-node-server
 
-    - name: Run Tests
-      run: npm test
-      working-directory: ./backend/my-node-server/tests
+      - name: build the Application
+        run: docker compose up --build -d
 
-    - name: Stopp the Application
-      if: always()
-      run: docker-compose down
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for services to start..."
+          sleep 20
+          docker compose ps
+      
+      - name: Run Tests
+        run: npm test
+        working-directory: ./backend/my-node-server
+
+      - name: Stopp the Application
+        if: always()
+        run: docker compose down
