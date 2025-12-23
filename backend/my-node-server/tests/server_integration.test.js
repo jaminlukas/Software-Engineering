@@ -28,12 +28,10 @@ describe('API Endpoints', () => {
   });
 
   /**
-   * Test für GET /api/reports
-   * - Stellt sicher, dass der Endpunkt erreichbar ist.
-   * - Prüft, ob die Antwortstruktur korrekt ist.
+   * @description Prüft, ob der GET-Endpunkt /api/reports alle Meldungen im korrekten Format zurückgibt.
    */
   it('sollte alle Meldungen abrufen und Status 200 zurückgeben', async () => {
-    // Zuerst eine Testmeldung erstellen, damit die DB nicht leer ist
+    // Test-Setup: Eine Meldung erstellen, damit die Datenbank nicht leer ist.
     await new Report({
         uuid: "test-uuid-123",
         raum: "Test-Raum A01",
@@ -43,24 +41,18 @@ describe('API Endpoints', () => {
     
     const res = await request(app).get('/api/reports');
     
-    // 1. Statuscode-Prüfung
     expect(res.statusCode).toEqual(200);
     
-    // 2. Struktur-Prüfung des Antwort-Bodys
     expect(res.body).toHaveProperty('data');
     expect(res.body).toHaveProperty('meta');
-
-    // 'data' sollte ein Array sein
     expect(Array.isArray(res.body.data)).toBe(true);
 
-    // 3. Inhaltsprüfung (optional, aber gut für die Konsistenz)
     expect(res.body.data.length).toBe(1);
     expect(res.body.data[0].raum).toBe("Test-Raum A01");
   });
 
   /**
-   * Test für POST /api/reports
-   * - Testet das Erstellen einer neuen Meldung mit validen Daten.
+   * @description Validiert das erfolgreiche Erstellen einer neuen Meldung via POST /api/reports.
    */
   it('sollte eine neue Meldung erstellen und Status 201 zurückgeben', async () => {
     const newReport = {
@@ -73,23 +65,20 @@ describe('API Endpoints', () => {
       .post('/api/reports')
       .send(newReport);
 
-    // 1. Statuscode-Prüfung
     expect(res.statusCode).toEqual(201);
 
-    // 2. Prüfung der zurückgegebenen Daten
     expect(res.body).toHaveProperty('uuid');
     expect(res.body.raum).toBe(newReport.raum);
     expect(res.body.status).toBe('offen');
 
-    // 3. Prüfen, ob die Meldung wirklich in der DB gespeichert wurde
+    // Verifizieren, dass die Meldung in der Datenbank persistiert wurde.
     const reportInDb = await Report.findOne({ uuid: res.body.uuid });
     expect(reportInDb).not.toBeNull();
     expect(reportInDb.beschreibung).toBe(newReport.beschreibung);
   });
 
   /**
-   * Test für POST /api/reports mit fehlenden Daten
-   * - Stellt sicher, dass die Validierung fehlschlägt.
+   * @description Stellt sicher, dass die API-Validierung bei fehlenden Daten (POST /api/reports) fehlschlägt.
    */
   it('sollte bei fehlenden Daten einen Fehler 400 zurückgeben', async () => {
     const incompleteReport = {
