@@ -1,27 +1,30 @@
 import request from 'supertest';
 import mongoose from 'mongoose';
-import app from '../server.js'; // Unsere Express-App
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import app from '../server.js'; // Die Express-App importieren
 
-// Die MONGO_URL wird durch das Importieren von server.js via dotenv geladen
-const MONGO_URL = process.env.MONGO_URL;
+let mongoServer;
+const Report = mongoose.model("Report");
 
 // --- Test-Suite für die API-Endpunkte ---
-
 describe('API Endpoints', () => {
 
-  // Vor allen Tests: Verbindung zur Test-Datenbank herstellen
+  // Vor allen Tests: In-Memory-MongoDB starten und verbinden
   beforeAll(async () => {
-    if (!MONGO_URL) {
-      throw new Error('MONGO_URL not defined. Make sure you have a .env file.');
-    }
-    // Wir verwenden die echte Datenbank für diesen Integrationstest,
-    // aber in einem echten Projekt würde man eine separate Test-DB nehmen.
-    await mongoose.connect(MONGO_URL);
+    mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
   });
 
-  // Nach allen Tests: Verbindung trennen, damit Jest sauber beenden kann
+  // Nach allen Tests: Verbindung trennen und In-Memory-DB stoppen
   afterAll(async () => {
-    await mongoose.connection.close();
+    await mongoose.disconnect();
+    await mongoServer.stop();
+  });
+
+  // Vor jedem Test: Alle Daten aus der Test-DB löschen
+  beforeEach(async () => {
+    await Report.deleteMany({});
   });
 
   /**
@@ -30,18 +33,29 @@ describe('API Endpoints', () => {
    * - Prüft, ob die Antwortstruktur korrekt ist.
    */
   it('sollte alle Meldungen abrufen und Status 200 zurückgeben', async () => {
+    // Zuerst eine Testmeldung erstellen, damit die DB nicht leer ist
+    await new Report({
+        uuid: "test-uuid-123",
+        raum: "Test-Raum A01",
+        beschreibung: "Licht flackert",
+        email: "test@dev.com"
+    }).save();
+    
     const res = await request(app).get('/api/reports');
     
     // 1. Statuscode-Prüfung
     expect(res.statusCode).toEqual(200);
     
     // 2. Struktur-Prüfung des Antwort-Bodys
-    // Die Antwort sollte ein Objekt sein, das 'data' und 'meta' enthält.
     expect(res.body).toHaveProperty('data');
     expect(res.body).toHaveProperty('meta');
 
     // 'data' sollte ein Array sein
     expect(Array.isArray(res.body.data)).toBe(true);
+
+    // 3. Inhaltsprüfung (optional, aber gut für die Konsistenz)
+    expect(res.body.data.length).toBe(1);
+    expect(res.body.data[0].raum).toBe("Test-Raum A01");
   });
 
   /**
@@ -66,6 +80,11 @@ describe('API Endpoints', () => {
     expect(res.body).toHaveProperty('uuid');
     expect(res.body.raum).toBe(newReport.raum);
     expect(res.body.status).toBe('offen');
+
+    // 3. Prüfen, ob die Meldung wirklich in der DB gespeichert wurde
+    const reportInDb = await Report.findOne({ uuid: res.body.uuid });
+    expect(reportInDb).not.toBeNull();
+    expect(reportInDb.beschreibung).toBe(newReport.beschreibung);
   });
 
   /**

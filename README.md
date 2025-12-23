@@ -1,8 +1,6 @@
 # **📲 CampusApp – Ticketsystem für Schäden**
 
-Die CampusApp bietet ein einfaches und effizientes Ticketsystem, um Schäden innerhalb der Hochschule zu melden.
-Studierende und Mitarbeitende können Defekte, Ausfälle oder andere Probleme direkt per App erfassen.
-So wird sichergestellt, dass Reparaturen schneller eingeleitet und die Campus-Infrastruktur optimal genutzt werden kann.
+Die CampusApp ist ein digitales Ticketsystem zur schnellen und unkomplizierten Meldung von Schäden an der Hochschule. Studierende und Mitarbeitende können Defekte, Ausfälle oder andere Probleme direkt über die App erfassen und mit einer Beschreibung, Fotos und Standortangabe versehen. Jede Meldung wird als Ticket gespeichert und mit einem Status versehen, um den Bearbeitungsfortschritt transparent nachvollziehen zu können. Verantwortliche Hausmeister oder Techniker sehen alle Tickets in einer Verwaltungsoberfläche und können diese priorisieren, zuordnen und abschließen. Die Anwendung soll übersichtlich, barrierefrei und benutzerfreundlich gestaltet sein, mit Fokus auf modernes, minimalistisches Design. Technisch basiert die CampusApp auf React für das Frontend, Django für das Backend und MongoDB als Datenbank. Die Kommunikation zwischen den Komponenten erfolgt über eine API, um eine klare Trennung und einfache Erweiterbarkeit zu gewährleisten. Das Projekt entsteht im Rahmen eines Hochschulkurses und wird als MVP bzw. Proof of Concept umgesetzt. Echte Nutzerinnen und Nutzer sind in dieser Phase nicht vorgesehen, da der Schwerpunkt auf Funktionalität und technischer Umsetzung liegt. Nach Abschluss des MVP kann die App iterativ um zusätzliche Features erweitert werden.
 
 ## 👥 Team
 Dieses Projekt wird im Rahmen der Hochschule von folgenden Personen entwickelt:
