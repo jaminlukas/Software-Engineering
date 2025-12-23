@@ -1,0 +1,22 @@
+name: RunTestsBackend
+
+on:
+ pull_request:
+   branches:
+     - main
+     - Code
+
+jobs:
+ tests:
+  runs-on: ubuntu-latest
+  container:
+    image: node:22
+  steps:
+    - uses: actions/checkout@v3
+    - name: Set up Node.js Server
+      run: npm ci
+      working-directory: ./backend/my-node-server
+
+    - name: Run Tests
+      run: npm test
+      working-directory: ./backend/my-node-server/tests

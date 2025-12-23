@@ -83,3 +83,26 @@ Der Server ist unter unter `http://localhost:5173` erreichbar.
 
 ## Quelle
 https://gist.github.com/ScriptBytes/2c0b8658fe6e16467f697f76be06f7bd
+
+# Netzwerkkonfiguration & API-Endpunkte
+
+Dieser Abschnitt dokumentiert die relevanten Ports und API-Schnittstellen für die Entwicklung.
+
+## Ports (aus `docker-compose.yml`)
+
+| Service | Host-Port (Extern) | Container-Port (Intern) | URL für lokalen Zugriff |
+| :--- | :--- | :--- | :--- |
+| **Frontend (React)** | `5173` | `5173` | `http://localhost:5173` |
+| **Backend (Node.js)** | `3000` | `3000` | `http://localhost:3000` |
+| **Datenbank (Mongo)** | `27017` | `27017` | `mongodb://localhost:27017` |
+
+## API-Endpunkte
+
+Alle Endpunkte sind über die Backend-Basis-URL (`http://localhost:3000`) erreichbar.
+
+| Methode | Pfad | Beschreibung |
+| :--- | :--- | :--- |
+| `GET` | `/api/reports` | Ruft eine Liste von Schadensmeldungen ab. Unterstützt Filterung, Sortierung und Paginierung über Query-Parameter. |
+| `POST` | `/api/reports` | Erstellt eine neue Schadensmeldung. Benötigt `raum`, `beschreibung` und `email` im JSON-Body. |
+| `PATCH` | `/api/reports/:uuid/status` | Aktualisiert den Status einer spezifischen Meldung. Erwartet `{ "status": "..." }` im Body. |
+| `PATCH` | `/api/reports/:uuid/archive` | Archiviert oder de-archiviert eine spezifische Meldung. Erwartet `{ "archived": true/false }` im Body. |
