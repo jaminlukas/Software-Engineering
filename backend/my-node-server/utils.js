@@ -45,6 +45,5 @@ export const isValidImagePayload = (bild) => {
  * @returns {string}
  */
 export const escapeRegex = (string) => {
-  // Stellt sicher, dass der Input ein String ist, bevor replace aufgerufen wird
   return String(string).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 };
