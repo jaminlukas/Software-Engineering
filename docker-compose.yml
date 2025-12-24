@@ -1,0 +1,54 @@
+# docker-compose.yml
+# Definiert die Dienste für die gesamte Anwendung: Datenbank, Backend und Frontend.
+
+version: '3.8'
+
+services:
+  # 1. MongoDB-Dienst
+  # Verwendet ein offizielles Mongo-Image und konfiguriert die Datenbank.
+  mongo:
+    image: mongo:7.0
+    container_name: mongo_container
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # 2. Backend-Dienst (Node.js)
+  # Baut den Container aus dem Dockerfile im 'backend/my-node-server'-Verzeichnis.
+  backend:
+    build:
+      context: ./backend/my-node-server
+      dockerfile: Dockerfile
+    container_name: backend_container
+    ports:
+      - "3000:3000"
+    environment:
+      # Die MONGO_URL, die das Backend zur Verbindung mit dem 'mongo'-Dienst benötigt.
+      # 'mongo' ist der Hostname, der von Docker Compose im internen Netzwerk aufgelöst wird.
+      MONGO_URL: "mongodb://mongo:27017/reports"
+    # Stellt sicher, dass der 'mongo'-Dienst vor dem 'backend'-Dienst gestartet wird.
+    depends_on:
+      - mongo
+
+  # 3. Frontend-Dienst (React)
+  # Baut den Container aus dem Dockerfile im 'frontend/my-react-app'-Verzeichnis.
+  react-app:
+    build:
+      context: ./frontend/my-react-app
+      dockerfile: Dockerfile
+    container_name: react_app_container
+    ports:
+      - "5173:5173"
+    # Stellt sicher, dass der 'backend'-Dienst vor dem 'react-app'-Dienst gestartet wird.
+    # Dies ist wichtig, da Nginx im Frontend Anfragen an das Backend weiterleitet.
+    depends_on:
+      - backend
+
+# Definiert ein benanntes Volume, um die MongoDB-Daten persistent zu speichern.
+volumes:
+  mongo_data:
+    driver: local

@@ -1,0 +1,5 @@
+# Abhängigkeiten
+node_modules
+
+# Umgebungs-spezifische Variablen
+.env
